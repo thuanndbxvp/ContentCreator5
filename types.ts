@@ -21,10 +21,22 @@ export interface FormattingOptions {
 }
 
 // Data structures
+
+export interface CachedData {
+  visualPrompts: Record<string, VisualPrompt>;
+  allVisualPrompts: AllVisualPromptsResult[] | null;
+  summarizedScript: ScriptPartSummary[] | null;
+  extractedDialogue: string | null;
+  hasExtractedDialogue: boolean;
+  hasGeneratedAllVisualPrompts: boolean;
+  hasSummarizedScript: boolean;
+}
+
 export interface LibraryItem {
   id: number;
   topic: string;
   script: string;
+  cachedData?: CachedData;
 }
 
 export interface GenerationParams {

@@ -8,7 +8,7 @@ import { VisualPromptModal } from './components/VisualPromptModal';
 import { AllVisualPromptsModal } from './components/AllVisualPromptsModal';
 import { SummarizeModal } from './components/SummarizeModal';
 import { generateScript, generateScriptOutline, generateTopicSuggestions, reviseScript, generateScriptPart, extractDialogue, generateKeywordSuggestions, validateApiKey, generateVisualPrompt, generateAllVisualPrompts, summarizeScriptForScenes } from './services/geminiService';
-import type { StyleOptions, FormattingOptions, LibraryItem, GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, ScriptType, NumberOfSpeakers } from './types';
+import type { StyleOptions, FormattingOptions, LibraryItem, GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, ScriptType, NumberOfSpeakers, CachedData } from './types';
 import { TONE_OPTIONS, STYLE_OPTIONS, VOICE_OPTIONS, LANGUAGE_OPTIONS } from './constants';
 import { BookOpenIcon } from './components/icons/BookOpenIcon';
 
@@ -111,18 +111,17 @@ const App: React.FC = () => {
     }
   }, []);
   
-  // Effect to invalidate caches whenever the script changes
-  useEffect(() => {
+  const resetCachesAndStates = () => {
     setVisualPromptsCache(new Map());
     setAllVisualPromptsCache(null);
     setSummarizedScriptCache(null);
     setExtractedDialogueCache(null);
-    // Reset action indicators
     setHasExtractedDialogue(false);
     setHasGeneratedAllVisualPrompts(false);
     setHasSummarizedScript(false);
     setHasSavedToLibrary(false);
-  }, [generatedScript]);
+  };
+
 
   const handleAddApiKey = async (key: string): Promise<{ success: boolean, error?: string }> => {
     if (apiKeys.includes(key)) return { success: false, error: 'API Key này đã tồn tại trong danh sách.' };
@@ -147,16 +146,33 @@ const App: React.FC = () => {
 
   const handleSaveToLibrary = useCallback(() => {
     if (!generatedScript.trim() || !topic.trim()) return;
+
+    const cachedData: CachedData = {
+        visualPrompts: Object.fromEntries(visualPromptsCache),
+        allVisualPrompts: allVisualPromptsCache,
+        summarizedScript: summarizedScriptCache,
+        extractedDialogue: extractedDialogueCache,
+        hasExtractedDialogue,
+        hasGeneratedAllVisualPrompts,
+        hasSummarizedScript,
+    };
+
     const newItem: LibraryItem = {
       id: Date.now(),
       topic: topic,
       script: generatedScript,
+      cachedData: cachedData,
     };
+
     const updatedLibrary = [newItem, ...library];
     setLibrary(updatedLibrary);
     localStorage.setItem('yt-script-library', JSON.stringify(updatedLibrary));
     setHasSavedToLibrary(true);
-  }, [generatedScript, topic, library]);
+  }, [
+    generatedScript, topic, library, visualPromptsCache, allVisualPromptsCache, 
+    summarizedScriptCache, extractedDialogueCache, hasExtractedDialogue, 
+    hasGeneratedAllVisualPrompts, hasSummarizedScript
+  ]);
 
   const handleDeleteScript = useCallback((id: number) => {
     const updatedLibrary = library.filter(item => item.id !== id);
@@ -165,8 +181,22 @@ const App: React.FC = () => {
   }, [library]);
 
   const handleLoadScript = useCallback((item: LibraryItem) => {
+    resetCachesAndStates();
+
     setTopic(item.topic);
     setGeneratedScript(item.script);
+
+    if (item.cachedData) {
+        setVisualPromptsCache(new Map(Object.entries(item.cachedData.visualPrompts || {})));
+        setAllVisualPromptsCache(item.cachedData.allVisualPrompts);
+        setSummarizedScriptCache(item.cachedData.summarizedScript);
+        setExtractedDialogueCache(item.cachedData.extractedDialogue);
+        setHasExtractedDialogue(item.cachedData.hasExtractedDialogue);
+        setHasGeneratedAllVisualPrompts(item.cachedData.hasGeneratedAllVisualPrompts);
+        setHasSummarizedScript(item.cachedData.hasSummarizedScript);
+    }
+    
+    setHasSavedToLibrary(true); // Since it's loaded from the library, it's considered saved.
     setIsLibraryOpen(false);
   }, []);
 
@@ -218,6 +248,7 @@ const App: React.FC = () => {
     setGeneratedScript('');
     setIsGeneratingSequentially(false);
     setRevisionCount(0);
+    resetCachesAndStates();
 
     try {
       const isLongScript = parseInt(wordCount, 10) > 1000 && scriptType === 'Video';
@@ -242,6 +273,7 @@ const App: React.FC = () => {
     }
     setIsLoading(true);
     setError(null);
+    resetCachesAndStates();
 
     const params: GenerationParams = { topic, targetAudience, styleOptions, keywords, formattingOptions, wordCount, scriptParts, scriptType, numberOfSpeakers };
 
@@ -301,6 +333,7 @@ const App: React.FC = () => {
     setCurrentPartIndex(0);
     setIsGeneratingSequentially(true);
     setGeneratedScript('');
+    resetCachesAndStates();
   }, [generatedScript]);
 
   const handleExtractDialogue = useCallback(async () => {
