@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import type { GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary } from '../types';
+import type { GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, StyleOptions } from '../types';
+import { TONE_OPTIONS, STYLE_OPTIONS, VOICE_OPTIONS } from '../constants';
 
 // Helper function to handle API errors and provide more specific messages
 const handleApiError = (error: unknown, context: string): Error => {
@@ -614,5 +615,75 @@ export const summarizeScriptForScenes = async (script: string): Promise<ScriptPa
         }
     } catch (error) {
         throw handleApiError(error, 'tóm tắt kịch bản ra các cảnh');
+    }
+};
+
+export const suggestStyleOptions = async (topic: string): Promise<StyleOptions> => {
+    const toneValues = TONE_OPTIONS.map(o => o.value);
+    const styleValues = STYLE_OPTIONS.map(o => o.value);
+    const voiceValues = VOICE_OPTIONS.map(o => o.value);
+
+    const prompt = `
+        You are an expert YouTube content strategist. Based on the video topic provided, your task is to suggest the most suitable Tone, Style, and Voice for the script.
+
+        **Video Topic:** "${topic}"
+
+        You MUST choose exactly one option for each category from the provided lists.
+
+        **Available Tones:**
+        - ${toneValues.join('\n- ')}
+
+        **Available Styles:**
+        - ${styleValues.join('\n- ')}
+
+        **Available Voices:**
+        - ${voiceValues.join('\n- ')}
+
+        Analyze the topic and return a JSON object with three keys: "tone", "style", and "voice". The values for these keys must be one of the exact strings from the lists above. For example, if the topic is about a sad historical event, you might suggest a 'Formal' tone, 'Narrative' style, and 'Empathetic' voice.
+    `;
+
+    try {
+        const ai = getApiClient();
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        tone: {
+                            type: Type.STRING,
+                            description: `The suggested tone. Must be one of: ${toneValues.join(', ')}`
+                        },
+                        style: {
+                            type: Type.STRING,
+                            description: `The suggested style. Must be one of: ${styleValues.join(', ')}`
+                        },
+                        voice: {
+                            type: Type.STRING,
+                            description: `The suggested voice. Must be one of: ${voiceValues.join(', ')}`
+                        }
+                    },
+                    required: ["tone", "style", "voice"]
+                }
+            }
+        });
+
+        const jsonResponse = JSON.parse(response.text);
+        
+        // Validate the response to ensure it matches our types
+        if (
+            toneValues.includes(jsonResponse.tone) &&
+            styleValues.includes(jsonResponse.style) &&
+            voiceValues.includes(jsonResponse.voice)
+        ) {
+            return jsonResponse as StyleOptions;
+        } else {
+            console.error("AI returned invalid style options:", jsonResponse);
+            throw new Error("AI đã trả về các tùy chọn phong cách không hợp lệ.");
+        }
+    } catch (error) {
+        throw handleApiError(error, 'gợi ý phong cách');
     }
 };

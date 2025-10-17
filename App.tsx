@@ -7,7 +7,7 @@ import { ApiKeyModal } from './components/ApiKeyModal';
 import { VisualPromptModal } from './components/VisualPromptModal';
 import { AllVisualPromptsModal } from './components/AllVisualPromptsModal';
 import { SummarizeModal } from './components/SummarizeModal';
-import { generateScript, generateScriptOutline, generateTopicSuggestions, reviseScript, generateScriptPart, extractDialogue, generateKeywordSuggestions, validateApiKey, generateVisualPrompt, generateAllVisualPrompts, summarizeScriptForScenes } from './services/geminiService';
+import { generateScript, generateScriptOutline, generateTopicSuggestions, reviseScript, generateScriptPart, extractDialogue, generateKeywordSuggestions, validateApiKey, generateVisualPrompt, generateAllVisualPrompts, summarizeScriptForScenes, suggestStyleOptions } from './services/geminiService';
 import type { StyleOptions, FormattingOptions, LibraryItem, GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, ScriptType, NumberOfSpeakers, CachedData } from './types';
 import { TONE_OPTIONS, STYLE_OPTIONS, VOICE_OPTIONS, LANGUAGE_OPTIONS } from './constants';
 import { BookOpenIcon } from './components/icons/BookOpenIcon';
@@ -44,6 +44,9 @@ const App: React.FC = () => {
   const [keywordSuggestions, setKeywordSuggestions] = useState<string[]>([]);
   const [isSuggestingKeywords, setIsSuggestingKeywords] = useState<boolean>(false);
   const [keywordSuggestionError, setKeywordSuggestionError] = useState<string | null>(null);
+
+  const [isSuggestingStyle, setIsSuggestingStyle] = useState<boolean>(false);
+  const [styleSuggestionError, setStyleSuggestionError] = useState<string | null>(null);
 
   const [library, setLibrary] = useState<LibraryItem[]>([]);
   const [isLibraryOpen, setIsLibraryOpen] = useState<boolean>(false);
@@ -235,6 +238,24 @@ const App: React.FC = () => {
       setKeywordSuggestionError(err instanceof Error ? err.message : 'Lỗi không xác định khi tạo gợi ý từ khóa.');
     } finally {
       setIsSuggestingKeywords(false);
+    }
+  }, [topic]);
+
+  const handleSuggestStyleOptions = useCallback(async () => {
+    if (!topic.trim()) {
+      setStyleSuggestionError('Vui lòng nhập chủ đề chính trước.');
+      return;
+    }
+    setIsSuggestingStyle(true);
+    setStyleSuggestionError(null);
+
+    try {
+      const suggestedOptions = await suggestStyleOptions(topic);
+      setStyleOptions(suggestedOptions);
+    } catch (err) {
+      setStyleSuggestionError(err instanceof Error ? err.message : 'Lỗi không xác định khi tạo gợi ý phong cách.');
+    } finally {
+      setIsSuggestingStyle(false);
     }
   }, [topic]);
 
@@ -526,6 +547,9 @@ const App: React.FC = () => {
             setScriptType={setScriptType}
             numberOfSpeakers={numberOfSpeakers}
             setNumberOfSpeakers={setNumberOfSpeakers}
+            onSuggestStyle={handleSuggestStyleOptions}
+            isSuggestingStyle={isSuggestingStyle}
+            styleSuggestionError={styleSuggestionError}
           />
         </div>
         <div className="w-full md:w-3/5 lg:w-2/3">
