@@ -4,6 +4,8 @@ import { SparklesIcon } from './icons/SparklesIcon';
 import type { StyleOptions, FormattingOptions, Tone, Style, Voice, ScriptType, NumberOfSpeakers } from '../types';
 import { TONE_OPTIONS, STYLE_OPTIONS, VOICE_OPTIONS, LANGUAGE_OPTIONS, SCRIPT_TYPE_OPTIONS, NUMBER_OF_SPEAKERS_OPTIONS } from '../constants';
 import { IdeaBrainstorm } from './IdeaBrainstorm';
+import { Tooltip } from './Tooltip';
+import { TONE_EXPLANATIONS, STYLE_EXPLANATIONS, VOICE_EXPLANATIONS, FORMATTING_EXPLANATIONS } from '../constants/explanations';
 
 interface ControlPanelProps {
   topic: string;
@@ -199,6 +201,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         options={TONE_OPTIONS}
         selectedOption={styleOptions.tone}
         onSelect={(option) => setStyleOptions({ ...styleOptions, tone: option })}
+        explanations={TONE_EXPLANATIONS}
       />
 
       <OptionSelector<Style>
@@ -206,6 +209,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         options={STYLE_OPTIONS}
         selectedOption={styleOptions.style}
         onSelect={(option) => setStyleOptions({ ...styleOptions, style: option })}
+        explanations={STYLE_EXPLANATIONS}
       />
       
       <OptionSelector<Voice>
@@ -213,67 +217,82 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         options={VOICE_OPTIONS}
         selectedOption={styleOptions.voice}
         onSelect={(option) => setStyleOptions({ ...styleOptions, voice: option })}
+        explanations={VOICE_EXPLANATIONS}
       />
 
       <div>
         <label className="block text-sm font-medium text-text-secondary mb-2">{scriptType === 'Podcast' ? '9' : '8'}. Cấu trúc & Định dạng</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-                <label htmlFor="wordCount" className="block text-xs font-medium text-text-secondary mb-1">Tổng số từ</label>
-                <input id="wordCount" type="number" value={wordCount} onChange={e => setWordCount(e.target.value)} className="w-full bg-primary/70 border border-secondary rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition" placeholder="VD: 800"/>
-                {scriptType === 'Video' && parseInt(wordCount, 10) > 1000 && (
-                    <p className="text-xs text-amber-400 mt-2">
-                        Lưu ý: Với kịch bản dài (&gt;1000 từ), AI sẽ tạo một dàn ý chi tiết để đảm bảo chất lượng.
-                    </p>
-                )}
-            </div>
+            <Tooltip text={FORMATTING_EXPLANATIONS.wordCount}>
+                <div>
+                    <label htmlFor="wordCount" className="block text-xs font-medium text-text-secondary mb-1">Tổng số từ</label>
+                    <input id="wordCount" type="number" value={wordCount} onChange={e => setWordCount(e.target.value)} className="w-full bg-primary/70 border border-secondary rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition" placeholder="VD: 800"/>
+                    {scriptType === 'Video' && parseInt(wordCount, 10) > 1000 && (
+                        <p className="text-xs text-amber-400 mt-2">
+                            Lưu ý: Với kịch bản dài (&gt;1000 từ), AI sẽ tạo một dàn ý chi tiết để đảm bảo chất lượng.
+                        </p>
+                    )}
+                </div>
+            </Tooltip>
             {scriptType === 'Video' && (
-              <div>
-                  <label htmlFor="scriptParts" className="block text-xs font-medium text-text-secondary mb-1">Số phần</label>
-                  <div className="flex items-center space-x-2">
-                      <input 
-                          id="scriptParts" 
-                          type="number" 
-                          value={scriptParts === 'Auto' ? '' : scriptParts} 
-                          onChange={e => setScriptParts(e.target.value)} 
-                          disabled={scriptParts === 'Auto'}
-                          className="w-full bg-primary/70 border border-secondary rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition disabled:bg-primary/50 disabled:cursor-not-allowed" 
-                          placeholder="3"
-                      />
-                      <label className="flex items-center space-x-2 cursor-pointer whitespace-nowrap">
+              <Tooltip text={FORMATTING_EXPLANATIONS.scriptParts}>
+                  <div>
+                      <label htmlFor="scriptParts" className="block text-xs font-medium text-text-secondary mb-1">Số phần</label>
+                      <div className="flex items-center space-x-2">
                           <input 
-                              type="checkbox" 
-                              className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" 
-                              checked={scriptParts === 'Auto'} 
-                              onChange={(e) => setScriptParts(e.target.checked ? 'Auto' : '3')} 
+                              id="scriptParts" 
+                              type="number" 
+                              value={scriptParts === 'Auto' ? '' : scriptParts} 
+                              onChange={e => setScriptParts(e.target.value)} 
+                              disabled={scriptParts === 'Auto'}
+                              className="w-full bg-primary/70 border border-secondary rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition disabled:bg-primary/50 disabled:cursor-not-allowed" 
+                              placeholder="3"
                           />
-                          <span className="text-sm text-text-primary">Tự động</span>
-                      </label>
+                          <label className="flex items-center space-x-2 cursor-pointer whitespace-nowrap">
+                              <input 
+                                  type="checkbox" 
+                                  className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" 
+                                  checked={scriptParts === 'Auto'} 
+                                  onChange={(e) => setScriptParts(e.target.checked ? 'Auto' : '3')} 
+                              />
+                              <span className="text-sm text-text-primary">Tự động</span>
+                          </label>
+                      </div>
                   </div>
-              </div>
+              </Tooltip>
             )}
         </div>
         <div className="space-y-2 mt-4">
-            <label className="flex items-center space-x-3 cursor-pointer">
-                <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" checked={formattingOptions.includeIntro} onChange={(e) => handleCheckboxChange('includeIntro', e.target.checked)} />
-                <span className="text-text-primary">Bao gồm Intro</span>
-            </label>
-             <label className="flex items-center space-x-3 cursor-pointer">
-                <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" checked={formattingOptions.includeOutro} onChange={(e) => handleCheckboxChange('includeOutro', e.target.checked)} />
-                <span className="text-text-primary">Bao gồm Outro</span>
-            </label>
-            <label className="flex items-center space-x-3 cursor-pointer">
-                <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" checked={formattingOptions.headings} onChange={(e) => handleCheckboxChange('headings', e.target.checked)} />
-                <span className="text-text-primary capitalize">Sử dụng Tiêu đề</span>
-            </label>
-            <label className="flex items-center space-x-3 cursor-pointer">
-                <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" checked={formattingOptions.bullets} onChange={(e) => handleCheckboxChange('bullets', e.target.checked)} />
-                <span className="text-text-primary capitalize">Sử dụng Gạch đầu dòng</span>
-            </label>
-             <label className="flex items-center space-x-3 cursor-pointer">
-                <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" checked={formattingOptions.bold} onChange={(e) => handleCheckboxChange('bold', e.target.checked)} />
-                <span className="text-text-primary capitalize">Sử dụng In đậm/nghiêng</span>
-            </label>
+            <Tooltip text={FORMATTING_EXPLANATIONS.includeIntro} className="block">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" checked={formattingOptions.includeIntro} onChange={(e) => handleCheckboxChange('includeIntro', e.target.checked)} />
+                    <span className="text-text-primary">Bao gồm Intro</span>
+                </label>
+            </Tooltip>
+             <Tooltip text={FORMATTING_EXPLANATIONS.includeOutro} className="block">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" checked={formattingOptions.includeOutro} onChange={(e) => handleCheckboxChange('includeOutro', e.target.checked)} />
+                    <span className="text-text-primary">Bao gồm Outro</span>
+                </label>
+            </Tooltip>
+            <Tooltip text={FORMATTING_EXPLANATIONS.headings} className="block">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" checked={formattingOptions.headings} onChange={(e) => handleCheckboxChange('headings', e.target.checked)} />
+                    <span className="text-text-primary capitalize">Sử dụng Tiêu đề</span>
+                </label>
+            </Tooltip>
+            <Tooltip text={FORMATTING_EXPLANATIONS.bullets} className="block">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" checked={formattingOptions.bullets} onChange={(e) => handleCheckboxChange('bullets', e.target.checked)} />
+                    <span className="text-text-primary capitalize">Sử dụng Gạch đầu dòng</span>
+                </label>
+            </Tooltip>
+             <Tooltip text={FORMATTING_EXPLANATIONS.bold} className="block">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" checked={formattingOptions.bold} onChange={(e) => handleCheckboxChange('bold', e.target.checked)} />
+                    <span className="text-text-primary capitalize">Sử dụng In đậm/nghiêng</span>
+                </label>
+            </Tooltip>
         </div>
       </div>
 
