@@ -63,22 +63,23 @@ export const AllVisualPromptsModal: React.FC<AllVisualPromptsModalProps> = ({ is
   const handleDownloadExcel = () => {
     if (!prompts || typeof XLSX === 'undefined') return;
 
-    // 1. Prepare data in Array of Arrays format
-    const header = ['STT', 'Prompt', 'Trạng thái'];
+    // Prepare data in Array of Arrays format to match the user's requested Excel structure.
+    const header = ['STT', 'Prompt', 'Trạng thái', 'Dịch nghĩa prompt'];
     const data = prompts.map((item, index) => [
-        index + 1,
-        item.english,
-        '' // Empty status column
+        index + 1,       // STT
+        item.english,    // Prompt
+        '',              // Trạng thái (empty for user)
+        item.vietnamese  // Dịch nghĩa prompt
     ]);
 
-    // 2. Create worksheet
+    // Create worksheet
     const worksheet = XLSX.utils.aoa_to_sheet([header, ...data]);
 
-    // 3. Create workbook and append the sheet
+    // Create workbook and append the sheet
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Dữ Liệu JSON Scenes');
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Visual Prompts');
 
-    // 4. Trigger download
+    // Trigger download
     XLSX.writeFile(workbook, 'youtube_script_prompts.xlsx');
   };
 

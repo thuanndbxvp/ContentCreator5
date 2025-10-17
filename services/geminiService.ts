@@ -3,25 +3,51 @@ import type { GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPart
 
 // Helper function to handle API errors and provide more specific messages
 const handleApiError = (error: unknown, context: string): Error => {
-    console.error(`Error during ${context}:`, error);
-    if (error instanceof Error) {
-        let userMessage = `Could not ${context}.`;
-        
-        const lowerCaseErrorMessage = error.message.toLowerCase();
+    console.error(`Lỗi trong lúc ${context}:`, error);
 
-        if (lowerCaseErrorMessage.includes('api key not valid') || lowerCaseErrorMessage.includes('api_key_invalid')) {
-            userMessage += ' The API Key is invalid. Please check it in the settings.';
-        } else if (error.message.includes('429') || lowerCaseErrorMessage.includes('quota')) {
-            userMessage += ' You have reached the request limit. Please try again later.';
-        } else if (lowerCaseErrorMessage.includes('safety')) {
-            userMessage += ' Your request was blocked for safety reasons. Please adjust the topic or keywords.';
-        } else {
-            // For other errors, show the original message for better debugging.
-            userMessage += ` Details: ${error.message}`;
-        }
-        return new Error(userMessage);
+    if (!(error instanceof Error)) {
+        return new Error(`Không thể ${context}. Đã xảy ra lỗi không xác định.`);
     }
-    return new Error(`Could not ${context}. An unknown error occurred.`);
+
+    const errorMessage = error.message;
+    const lowerCaseErrorMessage = errorMessage.toLowerCase();
+
+    // Priority 1: Attempt to parse structured JSON error from the message
+    try {
+        const jsonStartIndex = errorMessage.indexOf('{');
+        if (jsonStartIndex > -1) {
+            const jsonString = errorMessage.substring(jsonStartIndex);
+            const errorObj = JSON.parse(jsonString);
+
+            if (errorObj.error) {
+                const apiError = errorObj.error;
+                if (apiError.code === 429 || apiError.status === 'RESOURCE_EXHAUSTED') {
+                    return new Error('Bạn đã vượt quá giới hạn yêu cầu (Quota). Điều này có thể xảy ra với bậc miễn phí của Gemini API. Vui lòng đợi một lát và thử lại, hoặc kiểm tra gói cước và chi tiết thanh toán của bạn. Để biết thêm thông tin, hãy truy cập ai.google.dev/gemini-api/docs/rate-limits.');
+                }
+                if ((apiError.status === 'INVALID_ARGUMENT' && apiError.message.toLowerCase().includes('api key not valid')) || lowerCaseErrorMessage.includes('api_key_invalid')) {
+                    return new Error('API Key không hợp lệ hoặc đã bị thu hồi. Vui lòng kiểm tra lại trong phần cài đặt.');
+                }
+                // Return a more detailed message from the API if available
+                return new Error(`Không thể ${context}. Chi tiết từ API: ${apiError.message || JSON.stringify(apiError)}`);
+            }
+        }
+    } catch (e) {
+        // JSON parsing failed, proceed to string matching as a fallback
+    }
+
+    // Priority 2: Fallback to string matching for client-side or non-JSON errors
+    if (lowerCaseErrorMessage.includes('failed to execute') && lowerCaseErrorMessage.includes('on \'headers\'')) {
+        return new Error('Lỗi yêu cầu mạng: API key có thể chứa ký tự không hợp lệ. Vui lòng đảm bảo API key của bạn không chứa ký tự đặc biệt hoặc khoảng trắng bị sao chép nhầm.');
+    }
+    if (lowerCaseErrorMessage.includes('api key not valid')) { // Redundant but safe fallback
+        return new Error('API Key không hợp lệ hoặc đã bị thu hồi. Vui lòng kiểm tra lại trong phần cài đặt.');
+    }
+    if (lowerCaseErrorMessage.includes('safety')) {
+        return new Error('Yêu cầu của bạn đã bị chặn vì lý do an toàn. Vui lòng điều chỉnh chủ đề hoặc từ khóa.');
+    }
+
+    // Generic fallback if no specific pattern is matched
+    return new Error(`Không thể ${context}. Chi tiết: ${errorMessage}`);
 };
 
 
@@ -29,24 +55,24 @@ const handleApiError = (error: unknown, context: string): Error => {
 const getApiClient = (): GoogleGenAI => {
     const keysJson = localStorage.getItem('gemini-api-keys');
     if (!keysJson) {
-        throw new Error("API Key not found. Please add your API Key using the 'API' button.");
+        throw new Error("Không tìm thấy API Key. Vui lòng thêm API Key bằng nút 'API'.");
     }
     try {
         const keys = JSON.parse(keysJson);
         if (!Array.isArray(keys) || keys.length === 0) {
-            throw new Error("API Key not found. Please add your API Key using the 'API' button.");
+            throw new Error("Không tìm thấy API Key. Vui lòng thêm API Key bằng nút 'API'.");
         }
         // Use the first key in the list as the active one
         const apiKey = keys[0];
         return new GoogleGenAI({ apiKey });
     } catch (e) {
-        console.error("Error initializing GoogleGenAI:", e);
-        throw new Error("Failed to initialize AI Client. The API Key may be invalid.");
+        console.error("Lỗi khởi tạo GoogleGenAI:", e);
+        throw new Error("Không thể khởi tạo AI Client. API Key có thể không hợp lệ.");
     }
 }
 
 export const validateApiKey = async (apiKey: string): Promise<boolean> => {
-    if (!apiKey) return false;
+    if (!apiKey) throw new Error("API Key không được để trống.");
     try {
         const ai = new GoogleGenAI({ apiKey });
         // A simple, fast, and low-token request to check validity.
@@ -54,10 +80,23 @@ export const validateApiKey = async (apiKey: string): Promise<boolean> => {
             model: 'gemini-2.5-flash',
             contents: 'test',
         });
-        return true;
+        return true; // Key is valid and usable
     } catch (error) {
-        console.error("API Key validation failed:", error);
-        return false;
+        console.error("Lỗi trong lúc xác thực API key:", error);
+
+        // A rate limit error (429) means the key IS valid, but the quota is exceeded.
+        // For the purpose of SAVING the key, we should treat this as a successful validation.
+        // The user will be notified about the quota when they actually try to generate content.
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const lowerCaseErrorMessage = errorMessage.toLowerCase();
+
+        if (lowerCaseErrorMessage.includes('resource_exhausted') || lowerCaseErrorMessage.includes('429')) {
+             console.log("Validation succeeded despite rate limit. The key is considered valid.");
+             return true; 
+        }
+
+        // For all other errors (e.g., invalid key format), treat them as validation failures.
+        throw handleApiError(error, 'xác thực API key');
     }
 };
 
@@ -156,7 +195,7 @@ export const generateScript = async (params: GenerationParams): Promise<string> 
         });
         return response.text;
     } catch (error) {
-        throw handleApiError(error, 'generate script');
+        throw handleApiError(error, 'tạo kịch bản');
     }
 };
 
@@ -194,7 +233,7 @@ export const generateScriptOutline = async (topic: string, wordCount: string, la
         const userGuide = `### Dàn Ý Chi Tiết Cho Kịch Bản Dài\n\n**Gợi ý:** Kịch bản của bạn dài hơn 1000 từ. Đây là dàn ý chi tiết AI đã tạo ra. Bạn có thể sử dụng nút "Tạo kịch bản đầy đủ" bên dưới để AI tự động viết từng phần cho bạn.\n\n---\n\n`;
         return userGuide + response.text;
     } catch (error) {
-        throw handleApiError(error, 'generate outline');
+        throw handleApiError(error, 'tạo dàn ý');
     }
 };
 
@@ -231,7 +270,7 @@ export const generateTopicSuggestions = async (theme: string): Promise<string[]>
         return suggestions;
 
     } catch (error) {
-        throw handleApiError(error, 'generate topic suggestions');
+        throw handleApiError(error, 'tạo gợi ý chủ đề');
     }
 };
 
@@ -268,7 +307,7 @@ export const generateKeywordSuggestions = async (topic: string): Promise<string[
         return keywords;
 
     } catch (error) {
-        throw handleApiError(error, 'generate keyword suggestions');
+        throw handleApiError(error, 'tạo gợi ý từ khóa');
     }
 };
 
@@ -308,7 +347,7 @@ export const reviseScript = async (originalScript: string, revisionInstruction: 
         });
         return response.text;
     } catch (error) {
-        throw handleApiError(error, 'revise script');
+        throw handleApiError(error, 'sửa kịch bản');
     }
 };
 
@@ -351,7 +390,7 @@ export const generateScriptPart = async (fullOutline: string, previousPartsScrip
         });
         return response.text;
     } catch (error) {
-        throw handleApiError(error, 'generate next script part');
+        throw handleApiError(error, 'tạo phần kịch bản tiếp theo');
     }
 };
 
@@ -388,7 +427,7 @@ export const extractDialogue = async (script: string, language: string): Promise
         });
         return response.text;
     } catch (error) {
-        throw handleApiError(error, 'extract dialogue');
+        throw handleApiError(error, 'tách lời thoại');
     }
 };
 
@@ -436,7 +475,7 @@ export const generateVisualPrompt = async (sceneDescription: string): Promise<Vi
             throw new Error("AI returned data in an unexpected format.");
         }
     } catch (error) {
-        throw handleApiError(error, 'generate visual prompt');
+        throw handleApiError(error, 'tạo prompt hình ảnh');
     }
 };
 
@@ -497,7 +536,7 @@ export const generateAllVisualPrompts = async (script: string): Promise<AllVisua
             throw new Error("AI returned data in an unexpected format.");
         }
     } catch (error) {
-        throw handleApiError(error, 'generate all visual prompts');
+        throw handleApiError(error, 'tạo tất cả prompt hình ảnh');
     }
 };
 
@@ -574,6 +613,6 @@ export const summarizeScriptForScenes = async (script: string): Promise<ScriptPa
             throw new Error("AI returned data in an unexpected format.");
         }
     } catch (error) {
-        throw handleApiError(error, 'summarize script for scenes');
+        throw handleApiError(error, 'tóm tắt kịch bản ra các cảnh');
     }
 };

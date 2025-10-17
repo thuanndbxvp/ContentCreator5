@@ -78,6 +78,11 @@ const App: React.FC = () => {
   const [isSummarizing, setIsSummarizing] = useState<boolean>(false);
   const [summarizationError, setSummarizationError] = useState<string | null>(null);
 
+  // Caching states
+  const [visualPromptsCache, setVisualPromptsCache] = useState<Map<string, VisualPrompt>>(new Map());
+  const [allVisualPromptsCache, setAllVisualPromptsCache] = useState<AllVisualPromptsResult[] | null>(null);
+  const [summarizedScriptCache, setSummarizedScriptCache] = useState<ScriptPartSummary[] | null>(null);
+
 
   useEffect(() => {
     try {
@@ -98,19 +103,27 @@ const App: React.FC = () => {
       console.error("Failed to load data from localStorage", e);
     }
   }, []);
+  
+  // Effect to invalidate caches whenever the script changes
+  useEffect(() => {
+    setVisualPromptsCache(new Map());
+    setAllVisualPromptsCache(null);
+    setSummarizedScriptCache(null);
+  }, [generatedScript]);
 
-  const handleAddApiKey = async (key: string): Promise<boolean> => {
-    if (apiKeys.includes(key)) return false;
+  const handleAddApiKey = async (key: string): Promise<{ success: boolean, error?: string }> => {
+    if (apiKeys.includes(key)) return { success: false, error: 'API Key này đã tồn tại trong danh sách.' };
 
-    const isValid = await validateApiKey(key);
-    if (isValid) {
-      // Add new key to the front to make it the active one
-      const updatedKeys = [key, ...apiKeys];
-      setApiKeys(updatedKeys);
-      localStorage.setItem('gemini-api-keys', JSON.stringify(updatedKeys));
-      return true;
+    try {
+        await validateApiKey(key);
+        // Add new key to the front to make it the active one
+        const updatedKeys = [key, ...apiKeys];
+        setApiKeys(updatedKeys);
+        localStorage.setItem('gemini-api-keys', JSON.stringify(updatedKeys));
+        return { success: true };
+    } catch (err) {
+        return { success: false, error: err instanceof Error ? err.message : 'Lỗi không xác định khi xác thực key.' };
     }
-    return false;
   };
 
   const handleDeleteApiKey = (keyToDelete: string) => {
@@ -295,6 +308,12 @@ const App: React.FC = () => {
   }, [generatedScript, targetAudience]);
 
   const handleGenerateVisualPrompt = useCallback(async (scene: string) => {
+    if (visualPromptsCache.has(scene)) {
+        setVisualPrompt(visualPromptsCache.get(scene)!);
+        setIsVisualPromptModalOpen(true);
+        return;
+    }
+
     setIsGeneratingVisualPrompt(true);
     setVisualPrompt(null);
     setVisualPromptError(null);
@@ -303,32 +322,75 @@ const App: React.FC = () => {
     try {
         const prompt = await generateVisualPrompt(scene);
         setVisualPrompt(prompt);
+        setVisualPromptsCache(prevCache => new Map(prevCache).set(scene, prompt));
     } catch(err) {
         setVisualPromptError(err instanceof Error ? err.message : 'Lỗi không xác định khi tạo prompt.');
     } finally {
         setIsGeneratingVisualPrompt(false);
     }
-  }, []);
+  }, [visualPromptsCache]);
   
   const handleGenerateAllVisualPrompts = useCallback(async () => {
     if (!generatedScript.trim()) return;
+
+    // If a full cache for "all prompts" already exists, use it as a base.
+    // Merge it with any individually generated prompts which might be newer.
+    if (allVisualPromptsCache) {
+        const mergedPrompts = allVisualPromptsCache.map(p => {
+            const singleCached = visualPromptsCache.get(p.scene);
+            if (singleCached) {
+                return { ...p, ...singleCached };
+            }
+            return p;
+        });
+        setAllVisualPrompts(mergedPrompts);
+        setIsAllVisualPromptsModalOpen(true);
+        return; // No API call needed
+    }
+
+    // If no full cache exists, call the API.
     setIsGeneratingAllVisualPrompts(true);
     setAllVisualPrompts(null);
     setAllVisualPromptsError(null);
     setIsAllVisualPromptsModalOpen(true);
 
     try {
-        const prompts = await generateAllVisualPrompts(generatedScript);
-        setAllVisualPrompts(prompts);
+        const promptsFromServer = await generateAllVisualPrompts(generatedScript);
+        
+        // After getting server results, merge them with the single-prompt cache,
+        // giving precedence to individually generated prompts.
+        const finalPrompts = promptsFromServer.map(serverPrompt => {
+            const cachedSinglePrompt = visualPromptsCache.get(serverPrompt.scene);
+            if (cachedSinglePrompt) {
+                return {
+                    scene: serverPrompt.scene,
+                    english: cachedSinglePrompt.english,
+                    vietnamese: cachedSinglePrompt.vietnamese,
+                };
+            }
+            return serverPrompt;
+        });
+
+        setAllVisualPrompts(finalPrompts);
+  
+        // Cache the complete, merged result for future use.
+        setAllVisualPromptsCache(finalPrompts);
     } catch(err) {
         setAllVisualPromptsError(err instanceof Error ? err.message : 'Lỗi không xác định khi tạo prompt hàng loạt.');
     } finally {
         setIsGeneratingAllVisualPrompts(false);
     }
-  }, [generatedScript]);
+  }, [generatedScript, allVisualPromptsCache, visualPromptsCache]);
 
   const handleSummarizeScript = useCallback(async () => {
     if (!generatedScript.trim()) return;
+    
+    if (summarizedScriptCache) {
+        setSummarizedScript(summarizedScriptCache);
+        setIsSummarizeModalOpen(true);
+        return;
+    }
+
     setIsSummarizing(true);
     setSummarizedScript(null);
     setSummarizationError(null);
@@ -337,12 +399,13 @@ const App: React.FC = () => {
     try {
         const summary = await summarizeScriptForScenes(generatedScript);
         setSummarizedScript(summary);
+        setSummarizedScriptCache(summary);
     } catch(err) {
         setSummarizationError(err instanceof Error ? err.message : 'Lỗi không xác định khi tóm tắt kịch bản.');
     } finally {
         setIsSummarizing(false);
     }
-  }, [generatedScript]);
+  }, [generatedScript, summarizedScriptCache]);
 
 
   useEffect(() => {

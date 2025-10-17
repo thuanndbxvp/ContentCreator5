@@ -7,7 +7,7 @@ interface ApiKeyModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentApiKeys: string[];
-  onAddKey: (key: string) => Promise<boolean>;
+  onAddKey: (key: string) => Promise<{ success: boolean, error?: string }>;
   onDeleteKey: (key: string) => void;
 }
 
@@ -32,8 +32,8 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
     }
     setStatus('validating');
     setError('');
-    const success = await onAddKey(newApiKeyInput.trim());
-    if (success) {
+    const result = await onAddKey(newApiKeyInput.trim());
+    if (result.success) {
       setStatus('success');
       setNewApiKeyInput('');
       setTimeout(() => {
@@ -41,7 +41,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
       }, 2000);
     } else {
       setStatus('error');
-      setError('API Key không hợp lệ hoặc đã tồn tại. Vui lòng kiểm tra lại.');
+      setError(result.error || 'Đã xảy ra lỗi không xác định. Vui lòng thử lại.');
     }
   };
 

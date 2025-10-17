@@ -66,38 +66,20 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ isOpen, onClose,
     const handleDownloadExcel = () => {
         if (!summary || typeof XLSX === 'undefined') return;
 
-        let header: string[];
+        const header = ['STT', 'Prompt', 'Trạng thái', 'Dịch nghĩa prompt'];
         const data: (string | number)[][] = [];
+        let sceneCounter = 1;
 
-        if (scriptType === 'Podcast') {
-            header = ['STT', 'Prompt (Tiếng Anh)', 'Trạng thái', 'Phần', 'Cảnh', 'Tóm tắt (Tiếng Việt)'];
-            let sceneCounter = 1;
-            summary.forEach(part => {
-                part.scenes.forEach(scene => {
-                    data.push([
-                        sceneCounter++, // STT
-                        scene.visualPrompt,
-                        '', // Trạng thái
-                        part.partTitle.replace(/^[#\s]+/, ''),
-                        scene.sceneNumber,
-                        scene.summary
-                    ]);
-                });
+        summary.forEach(part => {
+            part.scenes.forEach(scene => {
+                data.push([
+                    sceneCounter++,      // STT
+                    scene.visualPrompt,  // Prompt
+                    '',                  // Trạng thái
+                    scene.summary        // Using summary as the Vietnamese meaning
+                ]);
             });
-        } else { // 'Video' or default
-            header = ['Phần', 'Cảnh', 'Tóm tắt (Tiếng Việt)', 'Prompt (Tiếng Anh)', 'Trạng thái'];
-            summary.forEach(part => {
-                part.scenes.forEach(scene => {
-                    data.push([
-                        part.partTitle.replace(/^[#\s]+/, ''),
-                        scene.sceneNumber,
-                        scene.summary,
-                        scene.visualPrompt,
-                        '' // Empty status column for user
-                    ]);
-                });
-            });
-        }
+        });
 
         const worksheet = XLSX.utils.aoa_to_sheet([header, ...data]);
         const workbook = XLSX.utils.book_new();
