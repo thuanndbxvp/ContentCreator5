@@ -66,7 +66,7 @@ export const DialogueModal: React.FC<DialogueModalProps> = ({ isOpen, onClose, d
         </div>
         <div className="p-4 border-t border-primary flex justify-end items-center gap-4">
             {isLoading && (
-                <p className="text-xs text-text-secondary/80 flex-grow">Bạn có thể đóng hộp thoại này và quay trở lại sau khi hoàn tất.</p>
+                <p className="text-xs text-accent flex-grow">Bạn có thể đóng hộp thoại này và quay trở lại sau khi hoàn tất.</p>
             )}
             <button 
                 onClick={handleCopy}

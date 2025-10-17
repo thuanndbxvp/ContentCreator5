@@ -50,9 +50,10 @@ export const VOICE_OPTIONS: LabeledOption<Voice>[] = [
 
 export const LANGUAGE_OPTIONS: { value: string, label: string }[] = [
     { value: 'Vietnamese', label: 'Tiếng Việt' },
-    { value: 'English', label: 'Tiếng Anh (Quốc tế)' },
+    { value: 'English', label: 'Tiếng Anh' },
     { value: 'Korean', label: 'Tiếng Hàn' },
     { value: 'Japanese', label: 'Tiếng Nhật' },
     { value: 'Spanish', label: 'Tiếng Tây Ban Nha' },
+    { value: 'Portuguese', label: 'Tiếng Bồ Đào Nha' },
     { value: 'Hindi', label: 'Tiếng Hindi' },
 ];

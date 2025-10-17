@@ -84,6 +84,12 @@ const App: React.FC = () => {
   const [summarizedScriptCache, setSummarizedScriptCache] = useState<ScriptPartSummary[] | null>(null);
   const [extractedDialogueCache, setExtractedDialogueCache] = useState<string | null>(null);
 
+  // Action completion states
+  const [hasExtractedDialogue, setHasExtractedDialogue] = useState<boolean>(false);
+  const [hasGeneratedAllVisualPrompts, setHasGeneratedAllVisualPrompts] = useState<boolean>(false);
+  const [hasSummarizedScript, setHasSummarizedScript] = useState<boolean>(false);
+  const [hasSavedToLibrary, setHasSavedToLibrary] = useState<boolean>(false);
+
 
   useEffect(() => {
     try {
@@ -111,6 +117,11 @@ const App: React.FC = () => {
     setAllVisualPromptsCache(null);
     setSummarizedScriptCache(null);
     setExtractedDialogueCache(null);
+    // Reset action indicators
+    setHasExtractedDialogue(false);
+    setHasGeneratedAllVisualPrompts(false);
+    setHasSummarizedScript(false);
+    setHasSavedToLibrary(false);
   }, [generatedScript]);
 
   const handleAddApiKey = async (key: string): Promise<{ success: boolean, error?: string }> => {
@@ -144,6 +155,7 @@ const App: React.FC = () => {
     const updatedLibrary = [newItem, ...library];
     setLibrary(updatedLibrary);
     localStorage.setItem('yt-script-library', JSON.stringify(updatedLibrary));
+    setHasSavedToLibrary(true);
   }, [generatedScript, topic, library]);
 
   const handleDeleteScript = useCallback((id: number) => {
@@ -309,6 +321,7 @@ const App: React.FC = () => {
         const dialogue = await extractDialogue(generatedScript, targetAudience);
         setExtractedDialogue(dialogue);
         setExtractedDialogueCache(dialogue);
+        setHasExtractedDialogue(true);
     } catch(err) {
         setExtractionError(err instanceof Error ? err.message : 'Lỗi không xác định khi tách lời thoại.');
     } finally {
@@ -377,6 +390,7 @@ const App: React.FC = () => {
 
         setAllVisualPrompts(finalPrompts);
         setAllVisualPromptsCache(finalPrompts);
+        setHasGeneratedAllVisualPrompts(true);
     } catch(err) {
         setAllVisualPromptsError(err instanceof Error ? err.message : 'Lỗi không xác định khi tạo prompt hàng loạt.');
     } finally {
@@ -402,6 +416,7 @@ const App: React.FC = () => {
         const summary = await summarizeScriptForScenes(generatedScript);
         setSummarizedScript(summary);
         setSummarizedScriptCache(summary);
+        setHasSummarizedScript(true);
     } catch(err) {
         setSummarizationError(err instanceof Error ? err.message : 'Lỗi không xác định khi tóm tắt kịch bản.');
     } finally {
@@ -503,6 +518,10 @@ const App: React.FC = () => {
             onSummarizeScript={handleSummarizeScript}
             isSummarizing={isSummarizing}
             scriptType={scriptType}
+            hasExtractedDialogue={hasExtractedDialogue}
+            hasGeneratedAllVisualPrompts={hasGeneratedAllVisualPrompts}
+            hasSummarizedScript={hasSummarizedScript}
+            hasSavedToLibrary={hasSavedToLibrary}
           />
         </div>
       </main>

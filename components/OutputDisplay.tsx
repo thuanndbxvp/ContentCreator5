@@ -7,6 +7,7 @@ import { MicrophoneIcon } from './icons/MicrophoneIcon';
 import { CameraIcon } from './icons/CameraIcon';
 import { DownloadIcon } from './icons/DownloadIcon';
 import { FilmIcon } from './icons/FilmIcon';
+import { CheckIcon } from './icons/CheckIcon';
 import type { ScriptType } from '../types';
 
 interface OutputDisplayProps {
@@ -31,6 +32,10 @@ interface OutputDisplayProps {
   onSummarizeScript: () => void;
   isSummarizing: boolean;
   scriptType: ScriptType;
+  hasExtractedDialogue: boolean;
+  hasGeneratedAllVisualPrompts: boolean;
+  hasSummarizedScript: boolean;
+  hasSavedToLibrary: boolean;
 }
 
 const LoadingSkeleton: React.FC = () => (
@@ -82,7 +87,8 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({
     onExtractDialogue, isExtracting, onGenerateVisualPrompt,
     onGenerateAllVisualPrompts, isGeneratingAllVisualPrompts,
     onSummarizeScript, isSummarizing,
-    scriptType
+    scriptType,
+    hasExtractedDialogue, hasGeneratedAllVisualPrompts, hasSummarizedScript, hasSavedToLibrary
 }) => {
     const [copySuccess, setCopySuccess] = useState('');
     const [loadingPromptIndex, setLoadingPromptIndex] = useState<number | null>(null);
@@ -181,7 +187,7 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({
             <h2 className="text-lg font-semibold text-text-primary">
                 {getTitle()}
             </h2>
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-3 flex-wrap">
                 {script && !isLoading && isOutline && !isGeneratingSequentially && (
                     <button onClick={onStartSequentialGenerate} className="flex items-center space-x-2 bg-accent hover:bg-indigo-500 text-white px-3 py-1.5 rounded-md text-sm font-semibold transition">
                         <BoltIcon className="w-4 h-4" />
@@ -198,15 +204,18 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({
                             >
                                 <CameraIcon className="w-4 h-4" />
                                 <span>{isGeneratingAllVisualPrompts ? 'Đang tạo...' : 'Tạo ảnh/video'}</span>
+                                {hasGeneratedAllVisualPrompts && !isGeneratingAllVisualPrompts && <CheckIcon className="w-4 h-4 text-green-400 ml-1" />}
                             </button>
                         )}
                         <button onClick={onExtractDialogue} className="flex items-center space-x-2 bg-primary/70 hover:bg-primary text-text-secondary px-3 py-1.5 rounded-md text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed" disabled={isExtracting || isLoading}>
                             <MicrophoneIcon className="w-4 h-4" />
                             <span>{isExtracting ? 'Đang tách...' : 'Tách voice'}</span>
+                            {hasExtractedDialogue && !isExtracting && <CheckIcon className="w-4 h-4 text-green-400 ml-1" />}
                         </button>
                         <button onClick={onSaveToLibrary} className="flex items-center space-x-2 bg-primary/70 hover:bg-primary text-text-secondary px-3 py-1.5 rounded-md text-sm transition disabled:opacity-50 disabled:cursor-not-allowed" disabled={isLoading}>
                             <SaveIcon className="w-4 h-4" />
                             <span>Lưu vào thư viện</span>
+                            {hasSavedToLibrary && <CheckIcon className="w-4 h-4 text-green-400 ml-1" />}
                         </button>
                         <button onClick={handleExportTxt} className="flex items-center space-x-2 bg-primary/70 hover:bg-primary text-text-secondary px-3 py-1.5 rounded-md text-sm transition disabled:opacity-50 disabled:cursor-not-allowed" disabled={isLoading}>
                             <DownloadIcon className="w-4 h-4" />
@@ -272,6 +281,7 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({
                                 Tóm tắt Kịch bản
                             </>
                         )}
+                        {hasSummarizedScript && !isSummarizing && <CheckIcon className="w-5 h-5 text-green-400 ml-2" />}
                     </button>
                 </div>
             </div>

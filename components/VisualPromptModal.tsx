@@ -97,7 +97,7 @@ export const VisualPromptModal: React.FC<VisualPromptModalProps> = ({ isOpen, on
         </div>
         <div className="p-4 border-t border-primary flex justify-end items-center gap-4">
             {isLoading && (
-                <p className="text-xs text-text-secondary/80 flex-grow">Bạn có thể đóng hộp thoại này và quay trở lại sau khi hoàn tất.</p>
+                <p className="text-xs text-accent flex-grow">Bạn có thể đóng hộp thoại này và quay trở lại sau khi hoàn tất.</p>
             )}
             <button onClick={onClose} className="bg-accent hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-md transition">
                 Đóng
