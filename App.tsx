@@ -82,6 +82,7 @@ const App: React.FC = () => {
   const [visualPromptsCache, setVisualPromptsCache] = useState<Map<string, VisualPrompt>>(new Map());
   const [allVisualPromptsCache, setAllVisualPromptsCache] = useState<AllVisualPromptsResult[] | null>(null);
   const [summarizedScriptCache, setSummarizedScriptCache] = useState<ScriptPartSummary[] | null>(null);
+  const [extractedDialogueCache, setExtractedDialogueCache] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -109,6 +110,7 @@ const App: React.FC = () => {
     setVisualPromptsCache(new Map());
     setAllVisualPromptsCache(null);
     setSummarizedScriptCache(null);
+    setExtractedDialogueCache(null);
   }, [generatedScript]);
 
   const handleAddApiKey = async (key: string): Promise<{ success: boolean, error?: string }> => {
@@ -291,6 +293,12 @@ const App: React.FC = () => {
 
   const handleExtractDialogue = useCallback(async () => {
     if (!generatedScript.trim()) return;
+
+    if (extractedDialogueCache) {
+      setExtractedDialogue(extractedDialogueCache);
+      setIsDialogueModalOpen(true);
+      return;
+    }
     
     setIsExtracting(true);
     setExtractionError(null);
@@ -300,12 +308,13 @@ const App: React.FC = () => {
     try {
         const dialogue = await extractDialogue(generatedScript, targetAudience);
         setExtractedDialogue(dialogue);
+        setExtractedDialogueCache(dialogue);
     } catch(err) {
         setExtractionError(err instanceof Error ? err.message : 'Lỗi không xác định khi tách lời thoại.');
     } finally {
         setIsExtracting(false);
     }
-  }, [generatedScript, targetAudience]);
+  }, [generatedScript, targetAudience, extractedDialogueCache]);
 
   const handleGenerateVisualPrompt = useCallback(async (scene: string) => {
     if (visualPromptsCache.has(scene)) {
@@ -333,8 +342,6 @@ const App: React.FC = () => {
   const handleGenerateAllVisualPrompts = useCallback(async () => {
     if (!generatedScript.trim()) return;
 
-    // If a full cache for "all prompts" already exists, use it as a base.
-    // Merge it with any individually generated prompts which might be newer.
     if (allVisualPromptsCache) {
         const mergedPrompts = allVisualPromptsCache.map(p => {
             const singleCached = visualPromptsCache.get(p.scene);
@@ -345,10 +352,9 @@ const App: React.FC = () => {
         });
         setAllVisualPrompts(mergedPrompts);
         setIsAllVisualPromptsModalOpen(true);
-        return; // No API call needed
+        return;
     }
 
-    // If no full cache exists, call the API.
     setIsGeneratingAllVisualPrompts(true);
     setAllVisualPrompts(null);
     setAllVisualPromptsError(null);
@@ -357,8 +363,6 @@ const App: React.FC = () => {
     try {
         const promptsFromServer = await generateAllVisualPrompts(generatedScript);
         
-        // After getting server results, merge them with the single-prompt cache,
-        // giving precedence to individually generated prompts.
         const finalPrompts = promptsFromServer.map(serverPrompt => {
             const cachedSinglePrompt = visualPromptsCache.get(serverPrompt.scene);
             if (cachedSinglePrompt) {
@@ -372,8 +376,6 @@ const App: React.FC = () => {
         });
 
         setAllVisualPrompts(finalPrompts);
-  
-        // Cache the complete, merged result for future use.
         setAllVisualPromptsCache(finalPrompts);
     } catch(err) {
         setAllVisualPromptsError(err instanceof Error ? err.message : 'Lỗi không xác định khi tạo prompt hàng loạt.');
