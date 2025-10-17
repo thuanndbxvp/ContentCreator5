@@ -522,6 +522,7 @@ const App: React.FC = () => {
             hasGeneratedAllVisualPrompts={hasGeneratedAllVisualPrompts}
             hasSummarizedScript={hasSummarizedScript}
             hasSavedToLibrary={hasSavedToLibrary}
+            visualPromptsCache={visualPromptsCache}
           />
         </div>
       </main>
