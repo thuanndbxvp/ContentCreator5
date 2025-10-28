@@ -10,11 +10,15 @@ interface TtsModalProps {
   dialogue: Record<string, string> | null;
   voices: ElevenlabsVoice[];
   isLoadingVoices: boolean;
-  onGenerate: (voiceId: string) => void;
-  isGenerating: boolean;
-  audioUrl: string | null;
+  onGenerate: (text: string, voiceId: string) => Promise<string>;
   error: string | null;
 }
+
+type GenerationStatus = {
+    isLoading: boolean;
+    audioUrl: string | null;
+    error: string | null;
+};
 
 const VoiceItem: React.FC<{voice: ElevenlabsVoice, isSelected: boolean, onSelect: () => void}> = ({ voice, isSelected, onSelect }) => {
     const audioRef = useRef<HTMLAudioElement>(null);
@@ -27,6 +31,10 @@ const VoiceItem: React.FC<{voice: ElevenlabsVoice, isSelected: boolean, onSelect
                 audioRef.current.pause();
                 audioRef.current.currentTime = 0;
             } else {
+                // Pause all other previews
+                document.querySelectorAll('audio').forEach(audio => {
+                    if (audio !== audioRef.current) audio.pause();
+                });
                 audioRef.current.play().catch(console.error);
             }
         }
@@ -67,23 +75,57 @@ const VoiceItem: React.FC<{voice: ElevenlabsVoice, isSelected: boolean, onSelect
 };
 
 
-export const TtsModal: React.FC<TtsModalProps> = ({ isOpen, onClose, dialogue, voices, isLoadingVoices, onGenerate, isGenerating, audioUrl, error }) => {
+export const TtsModal: React.FC<TtsModalProps> = ({ isOpen, onClose, dialogue, voices, isLoadingVoices, onGenerate, error }) => {
     const [selectedVoiceId, setSelectedVoiceId] = useState<string>('');
+    const [editableDialogue, setEditableDialogue] = useState<Record<string, string>>({});
+    const [generationState, setGenerationState] = useState<Record<string, GenerationStatus>>({});
 
     useEffect(() => {
         if(voices.length > 0 && !selectedVoiceId) {
             setSelectedVoiceId(voices[0].voice_id);
         }
     }, [voices, selectedVoiceId]);
+
+    useEffect(() => {
+        if (isOpen && dialogue) {
+            setEditableDialogue(dialogue);
+            setGenerationState({}); // Reset state when modal opens
+        }
+    }, [isOpen, dialogue]);
     
     if (!isOpen) return null;
 
-    const dialogueText = dialogue ? Object.values(dialogue).join('\n\n') : 'Không có lời thoại để chuyển đổi. Vui lòng tạo kịch bản và tách lời thoại trước.';
+    const handleTextChange = (partTitle: string, newText: string) => {
+        setEditableDialogue(prev => ({ ...prev, [partTitle]: newText }));
+    };
+
+    const handleGenerateForPart = async (partTitle: string) => {
+        if (!selectedVoiceId || !editableDialogue[partTitle]) return;
+
+        setGenerationState(prev => ({
+            ...prev,
+            [partTitle]: { isLoading: true, audioUrl: null, error: null }
+        }));
+
+        try {
+            const audioUrl = await onGenerate(editableDialogue[partTitle], selectedVoiceId);
+            setGenerationState(prev => ({
+                ...prev,
+                [partTitle]: { isLoading: false, audioUrl, error: null }
+            }));
+        } catch (caughtError) {
+            setGenerationState(prev => ({
+                ...prev,
+                [partTitle]: { isLoading: false, audioUrl: null, error: caughtError instanceof Error ? caughtError.message : 'Lỗi không xác định' }
+            }));
+        }
+    };
+
+    const isAnyPartLoading = Object.values(generationState).some(s => s.isLoading);
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4" onClick={onClose}>
-        <div className="bg-secondary rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border border-border" onClick={e => e.stopPropagation()}>
-            {/* Header */}
+        <div className="bg-secondary rounded-lg shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col border border-border" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center p-4 border-b border-border">
                 <div className="flex items-center gap-3">
                     <SpeakerWaveIcon className="w-6 h-6 text-accent"/>
@@ -92,13 +134,13 @@ export const TtsModal: React.FC<TtsModalProps> = ({ isOpen, onClose, dialogue, v
                 <button onClick={onClose} className="text-text-secondary hover:text-text-primary text-2xl font-bold">&times;</button>
             </div>
 
-            {/* Content */}
             <div className="flex-grow p-6 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto">
                 {/* Left: Voice Selection */}
                 <div className="flex flex-col min-h-0">
                     <h3 className="text-lg font-semibold text-text-primary mb-3">1. Chọn một giọng đọc</h3>
                     <div className="flex-grow bg-primary rounded-lg p-3 overflow-y-auto border border-border">
                         {isLoadingVoices && <p className="text-center p-4">Đang tải danh sách giọng nói...</p>}
+                        {error && !isLoadingVoices && <p className="text-red-400 p-4">{error}</p>}
                         {voices.length > 0 && (
                             <ul className="space-y-2">
                                 {voices.map(voice => (
@@ -115,50 +157,61 @@ export const TtsModal: React.FC<TtsModalProps> = ({ isOpen, onClose, dialogue, v
                     </div>
                 </div>
                 {/* Right: Text and Player */}
-                <div className="flex flex-col">
+                <div className="flex flex-col min-h-0">
                     <h3 className="text-lg font-semibold text-text-primary mb-3">2. Lời thoại & Kết quả</h3>
-                    <textarea
-                        readOnly
-                        value={dialogueText}
-                        className="w-full h-48 bg-primary border border-border rounded-md p-3 text-text-primary resize-none mb-4"
-                    />
-                    
-                    {audioUrl && !isGenerating && (
-                        <div className="bg-primary p-4 rounded-lg space-y-3 border border-border">
-                            <h4 className="font-semibold">Nghe thử kết quả</h4>
-                            <audio controls src={audioUrl} className="w-full"></audio>
-                            <a href={audioUrl} download="script_audio.mp3" className="flex items-center justify-center gap-2 w-full mt-2 text-sm bg-secondary hover:bg-secondary/70 text-text-secondary font-semibold py-2 px-4 rounded-md transition border border-border">
-                                <DownloadIcon className="w-5 h-5"/>
-                                Tải xuống file MP3
-                            </a>
-                        </div>
-                    )}
-                     {isGenerating && (
-                        <div className="bg-primary p-4 rounded-lg flex items-center justify-center text-accent border border-border">
-                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Đang tạo audio, quá trình này có thể mất vài phút...
-                        </div>
-                     )}
+                    <div className="flex-grow bg-primary rounded-lg p-3 overflow-y-auto border border-border space-y-4">
+                        {!dialogue && !error && (
+                             <div className="text-center text-text-secondary p-8">
+                                <p>Không có lời thoại để chuyển đổi.</p>
+                                <p className="text-sm mt-1">Vui lòng tạo kịch bản và sử dụng công cụ "Tách voice" trước.</p>
+                             </div>
+                        )}
+                        {Object.entries(editableDialogue).map(([partTitle, text]) => {
+                            const state = generationState[partTitle] || { isLoading: false, audioUrl: null, error: null };
+                            return (
+                                <div key={partTitle} className="bg-secondary p-3 rounded-lg border border-border">
+                                    <label className="block text-sm font-semibold text-text-primary mb-2">{partTitle}</label>
+                                    <textarea
+                                        value={text}
+                                        onChange={(e) => handleTextChange(partTitle, e.target.value)}
+                                        className="w-full h-28 bg-primary border border-border rounded-md p-2 text-text-primary resize-y text-sm"
+                                    />
+                                    <button
+                                        onClick={() => handleGenerateForPart(partTitle)}
+                                        disabled={!selectedVoiceId || state.isLoading || isAnyPartLoading || !text}
+                                        className="w-full mt-2 flex items-center justify-center bg-accent/80 hover:bg-accent text-white font-bold py-2 px-3 rounded-md transition disabled:opacity-50"
+                                    >
+                                        {state.isLoading ? (
+                                             <>
+                                                <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                <span>Đang tạo...</span>
+                                             </>
+                                        ) : (
+                                            'Tạo Audio'
+                                        )}
+                                    </button>
+                                    {state.audioUrl && (
+                                        <div className="mt-3 space-y-2">
+                                            <audio controls src={state.audioUrl} className="w-full h-10"></audio>
+                                            <a href={state.audioUrl} download={`${partTitle.replace(/\s/g, '_')}.mp3`} className="flex items-center justify-center gap-2 w-full text-xs bg-primary hover:bg-primary/50 text-text-secondary font-semibold py-1.5 px-3 rounded-md transition border border-border">
+                                                <DownloadIcon className="w-4 h-4"/>
+                                                Tải xuống
+                                            </a>
+                                        </div>
+                                    )}
+                                    {state.error && <p className="text-red-400 text-xs mt-2">{state.error}</p>}
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
 
-            {/* Footer */}
             <div className="p-4 border-t border-border flex justify-end items-center gap-4 flex-wrap">
-                {error && <p className="text-red-400 text-sm flex-grow">{error}</p>}
-                {(isGenerating || isLoadingVoices) && <div className="flex-grow text-sm text-accent">Đang xử lý, vui lòng chờ...</div>}
-                
+                {(isAnyPartLoading || isLoadingVoices) && <div className="flex-grow text-sm text-accent">Đang xử lý, vui lòng chờ...</div>}
+                <div className="flex-grow"></div>
                 <button onClick={onClose} className="bg-secondary/70 hover:bg-secondary text-text-secondary font-bold py-2 px-4 rounded-md transition border border-border">
                     Đóng
-                </button>
-                <button 
-                    onClick={() => onGenerate(selectedVoiceId)}
-                    disabled={isGenerating || isLoadingVoices || !selectedVoiceId || !dialogue}
-                    className="bg-accent hover:brightness-110 text-white font-bold py-2 px-4 rounded-md transition disabled:opacity-50"
-                >
-                    {isGenerating ? 'Đang tạo...' : 'Tạo Audio'}
                 </button>
             </div>
         </div>

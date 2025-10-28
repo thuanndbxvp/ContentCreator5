@@ -138,9 +138,7 @@ const App: React.FC = () => {
   const [isTtsModalOpen, setIsTtsModalOpen] = useState<boolean>(false);
   const [ttsVoices, setTtsVoices] = useState<ElevenlabsVoice[]>([]);
   const [isFetchingTtsVoices, setIsFetchingTtsVoices] = useState<boolean>(false);
-  const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
-  const [isGeneratingTts, setIsGeneratingTts] = useState<boolean>(false);
-  const [ttsError, setTtsError] = useState<string | null>(null);
+  const [ttsModalError, setTtsModalError] = useState<string | null>(null);
 
   const [aiProvider, setAiProvider] = useState<AiProvider>('gemini');
   const [selectedModel, setSelectedModel] = useState<string>(GEMINI_MODELS[1].value);
@@ -651,9 +649,9 @@ const App: React.FC = () => {
 
   const handleOpenTtsModal = async () => {
     if (!extractedDialogueCache) {
-        // Run extraction logic but don't open the dialogue modal, just populate the cache
         if (!generatedScript.trim()) {
-            setTtsError("Vui lòng tạo kịch bản trước.");
+            setTtsModalError("Vui lòng tạo kịch bản trước.");
+            setIsTtsModalOpen(true);
             return;
         }
         setIsExtracting(true);
@@ -661,47 +659,36 @@ const App: React.FC = () => {
             const dialogueObject = await extractDialogue(generatedScript, targetAudience, aiProvider, selectedModel);
             setExtractedDialogueCache(dialogueObject);
             setHasExtractedDialogue(true);
+             setIsTtsModalOpen(true);
         } catch(err) {
-            setTtsError(err instanceof Error ? err.message : 'Lỗi khi tách lời thoại cho TTS.');
-            setIsExtracting(false);
-            return;
+            setTtsModalError(err instanceof Error ? err.message : 'Lỗi khi tách lời thoại cho TTS.');
+            setIsTtsModalOpen(true);
         } finally {
             setIsExtracting(false);
         }
+    } else {
+      setIsTtsModalOpen(true);
     }
-    setIsTtsModalOpen(true);
-    setGeneratedAudioUrl(null);
-    setTtsError(null);
+    
+    setTtsModalError(null);
     if(ttsVoices.length === 0) {
         setIsFetchingTtsVoices(true);
         try {
             const voices = await getElevenlabsVoices();
             setTtsVoices(voices);
         } catch (err) {
-            setTtsError(err instanceof Error ? err.message : 'Lỗi không xác định khi lấy danh sách giọng nói.');
+            setTtsModalError(err instanceof Error ? err.message : 'Lỗi không xác định khi lấy danh sách giọng nói.');
         } finally {
             setIsFetchingTtsVoices(false);
         }
     }
   };
 
-  const handleGenerateTts = async (voiceId: string) => {
-      if (!extractedDialogueCache || !voiceId) {
-          setTtsError("Không có lời thoại hoặc chưa chọn giọng nói.");
-          return;
+  const handleGenerateTts = async (text: string, voiceId: string): Promise<string> => {
+      if (!text || !voiceId) {
+          throw new Error("Không có lời thoại hoặc chưa chọn giọng nói.");
       }
-      setIsGeneratingTts(true);
-      setTtsError(null);
-      setGeneratedAudioUrl(null);
-      try {
-          const fullDialogue = Object.values(extractedDialogueCache).join('\n\n');
-          const audioUrl = await generateElevenlabsTts(fullDialogue, voiceId);
-          setGeneratedAudioUrl(audioUrl);
-      } catch (err) {
-          setTtsError(err instanceof Error ? err.message : 'Lỗi không xác định khi tạo âm thanh.');
-      } finally {
-          setIsGeneratingTts(false);
-      }
+      return await generateElevenlabsTts(text, voiceId);
   };
 
 
@@ -923,9 +910,7 @@ const App: React.FC = () => {
         voices={ttsVoices}
         isLoadingVoices={isFetchingTtsVoices}
         onGenerate={handleGenerateTts}
-        isGenerating={isGeneratingTts}
-        audioUrl={generatedAudioUrl}
-        error={ttsError}
+        error={ttsModalError}
       />
     </div>
   );
