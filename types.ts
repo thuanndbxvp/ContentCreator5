@@ -22,6 +22,11 @@ export interface FormattingOptions {
 
 // Data structures
 
+export interface TopicSuggestionItem {
+    title: string;
+    outline: string;
+}
+
 export interface CachedData {
   visualPrompts: Record<string, VisualPrompt>;
   allVisualPrompts: AllVisualPromptsResult[] | null;
@@ -34,13 +39,15 @@ export interface CachedData {
 
 export interface LibraryItem {
   id: number;
-  topic: string;
+  title: string;
+  outlineContent: string;
   script: string;
   cachedData?: CachedData;
 }
 
 export interface GenerationParams {
-  topic: string;
+  title: string;
+  outlineContent: string;
   targetAudience: string;
   styleOptions: StyleOptions;
   keywords: string;

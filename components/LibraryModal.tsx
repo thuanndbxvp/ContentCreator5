@@ -34,8 +34,8 @@ export const LibraryModal: React.FC<LibraryModalProps> = ({ isOpen, onClose, lib
               {library.map(item => (
                 <li key={item.id} className="bg-primary/50 p-4 rounded-lg flex justify-between items-start gap-4">
                   <div className="flex-grow">
-                    <h3 className="font-semibold text-text-primary">{item.topic}</h3>
-                    <p className="text-sm text-text-secondary mt-1 line-clamp-2">{item.script}</p>
+                    <h3 className="font-semibold text-text-primary">{item.title}</h3>
+                    <p className="text-sm text-text-secondary mt-1 line-clamp-2">{item.outlineContent}</p>
                   </div>
                   <div className="flex-shrink-0 flex items-center gap-2">
                     <button onClick={() => onLoad(item)} className="text-xs bg-accent hover:bg-indigo-500 text-white font-bold py-1 px-3 rounded-md transition">Tải</button>

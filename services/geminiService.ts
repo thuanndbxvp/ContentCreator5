@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import type { GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, StyleOptions } from '../types';
+import type { GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, StyleOptions, TopicSuggestionItem } from '../types';
 import { TONE_OPTIONS, STYLE_OPTIONS, VOICE_OPTIONS } from '../constants';
 
 // Helper function to handle API errors and provide more specific messages
@@ -102,12 +102,17 @@ export const validateApiKey = async (apiKey: string): Promise<boolean> => {
 };
 
 export const generateScript = async (params: GenerationParams): Promise<string> => {
-    const { topic, targetAudience, styleOptions, keywords, formattingOptions, wordCount, scriptParts, scriptType, numberOfSpeakers } = params;
+    const { title, outlineContent, targetAudience, styleOptions, keywords, formattingOptions, wordCount, scriptParts, scriptType, numberOfSpeakers } = params;
     const { tone, style, voice } = styleOptions;
     const { headings, bullets, bold, includeIntro, includeOutro } = formattingOptions;
 
     const language = targetAudience;
     let prompt: string;
+
+    const outlineInstruction = outlineContent.trim() 
+        ? `**User's Outline / Key Points (Crucial):** You MUST strictly follow and expand upon this user-provided outline: "${outlineContent}". This is the core structure of the content.`
+        : `**User's Outline / Key Points (Crucial):** No specific outline was provided. Please create a logical structure based on the title.`;
+
 
     if (scriptType === 'Podcast') {
         const speakersInstruction = numberOfSpeakers === 'Auto'
@@ -117,7 +122,8 @@ export const generateScript = async (params: GenerationParams): Promise<string> 
         prompt = `
             You are an expert Podcast scriptwriter. Your task is to generate a compelling and well-structured podcast script in ${language}.
 
-            **Primary Topic:** "${topic}".
+            **Primary Title:** "${title}".
+            ${outlineInstruction}
             **Target Audience & Language:** The script must be written in ${language}.
 
             **Speaker & Character Instructions:**
@@ -128,7 +134,7 @@ export const generateScript = async (params: GenerationParams): Promise<string> 
             **Script Structure & Length:**
             - **Total Word Count:** Aim for approximately ${wordCount || '800'} words.
             - **Introduction:** ${includeIntro ? "Include a captivating introduction with intro music cues [intro music]." : "Do not write a separate introduction."}
-            - **Segments:** Structure the podcast into logical segments or talking points.
+            - **Segments:** Structure the podcast into logical segments or talking points, based on the provided outline.
             - **Outro:** ${includeOutro ? "Include a concluding outro with a call-to-action and outro music cues [outro music]." : "Do not write a separate outro."}
             - **Sound Cues:** Include sound effect cues where appropriate (e.g., [sound effect of a cash register], [transition sound]).
 
@@ -148,12 +154,13 @@ export const generateScript = async (params: GenerationParams): Promise<string> 
         `;
     } else { // Video script
         const scriptPartsInstruction = scriptParts === 'Auto'
-            ? "Structure the script into a logical number of main parts based on the topic and content flow."
+            ? "Structure the script into a logical number of main parts based on the title and provided outline."
             : `Structure the script into ${scriptParts} main parts. If the number of parts is 1, create a continuous flow.`;
 
         prompt = `
           You are an expert YouTube scriptwriter. Your task is to generate a compelling and well-structured video script in ${language}.
-          **Primary Goal:** Create a script about "${topic}".
+          **Primary Goal:** Create a script for a video titled "${title}".
+          ${outlineInstruction}
           **Target Audience & Language:** The script must be written in ${language} and should be culturally relevant for this audience.
           
           **Engagement & Retention Hooks:**
@@ -162,12 +169,11 @@ export const generateScript = async (params: GenerationParams): Promise<string> 
           - **Open-ended Questions:** Stimulate curiosity and encourage comments. Example in Vietnamese: "Theo bạn, ai thực sự đứng sau toàn bộ câu chuyện này?"
           - **Surprising Facts or Twists:** Introduce unexpected information to keep the viewer engaged. Example in Vietnamese: "Nhưng điều không ai ngờ tới: nhân vật này… chưa bao giờ tồn tại thật."
           - **Mid-video Soft CTAs:** Re-engage the viewer in the middle of the video. Example in Vietnamese: "Nếu bạn còn xem đến đây, bạn chắc chắn sẽ muốn biết phần sau cùng…"
-          - **Sequel Hooks (in the outro):** Encourage viewers to watch the next video. Example in Vietnamese: "Câu chuyện này chưa dừng lại đâu… vì ở phần sau, chúng ta sẽ khám phá điều bị che giấu 100 năm qua."
-
+          
           **Script Structure & Length:**
           - **Total Word Count:** Aim for approximately ${wordCount || '800'} words.
           - **Script Parts:** ${scriptPartsInstruction}
-          - **Introduction:** ${includeIntro ? "Include a captivating introduction to hook the viewer." : "Do not write a separate introduction."}
+          - **Introduction:** ${includeIntro ? "Include a captivating introduction to hook the viewer, based on the title." : "Do not write a separate introduction."}
           - **Outro:** ${includeOutro ? "Include a concluding outro with a call-to-action." : "Do not write a separate outro."}
           
           **AI Writing Style Guide:**
@@ -175,7 +181,7 @@ export const generateScript = async (params: GenerationParams): Promise<string> 
           - **Style:** ${style}. Structure the content in a ${style.toLowerCase()} manner.
           - **Voice:** ${voice}. The narrator's personality should be ${voice.toLowerCase()}.
           
-          **Crucial Instruction:** Ensure all parts of the script are well-connected, flow logically, and maintain a consistent narrative throughout.
+          **Crucial Instruction:** Ensure all parts of the script are well-connected, flow logically, and maintain a consistent narrative throughout, always respecting the user's provided outline.
           
           **Keywords:** If provided, naturally integrate the following keywords: "${keywords || 'None'}".
           
@@ -200,20 +206,24 @@ export const generateScript = async (params: GenerationParams): Promise<string> 
     }
 };
 
-export const generateScriptOutline = async (topic: string, wordCount: string, language: string): Promise<string> => {
+export const generateScriptOutline = async (params: GenerationParams): Promise<string> => {
+    const { title, outlineContent, targetAudience, wordCount } = params;
+    const language = targetAudience;
     const prompt = `
         You are an expert YouTube scriptwriter and content strategist.
         Your task is to generate a detailed and well-structured outline for a long-form YouTube video.
-        **Primary Topic:** "${topic}"
+        **Video Title:** "${title}"
+        **User's Initial Outline/Notes (if any):** "${outlineContent || 'None'}"
         **Target Language:** ${language}
         **Target Script Length:** Approximately ${wordCount} words.
         **Instructions:**
         1.  Create a comprehensive outline that breaks the topic down into a logical sequence (e.g., Introduction, Part 1, Part 2, ..., Conclusion).
-        2.  For each main part, include key talking points, sub-topics, or questions that should be answered.
-        3.  The structure should be clear and easy to follow, serving as a roadmap for writing the full script later.
-        4.  Suggest where engagement hooks (like a surprising fact or an open question) could be placed to maximize viewer retention.
-        5.  Ensure the outline is detailed enough to guide the creation of a script that meets the target word count.
-        6.  The entire response should be in ${language}. Use markdown headings starting from ## for parts.
+        2.  If the user provided an initial outline, use it as the primary guide and expand upon it.
+        3.  For each main part, include key talking points, sub-topics, or questions that should be answered.
+        4.  The structure should be clear and easy to follow, serving as a roadmap for writing the full script later.
+        5.  Suggest where engagement hooks (like a surprising fact or an open question) could be placed to maximize viewer retention.
+        6.  Ensure the outline is detailed enough to guide the creation of a script that meets the target word count.
+        7.  The entire response should be in ${language}. Use markdown headings starting from ## for parts.
         **Output Format:** Provide ONLY the outline, using markdown for headings, subheadings, and bullet points for clarity. Start directly with the outline.
         Example:
         ## I. Mở Đầu (Intro)
@@ -238,9 +248,9 @@ export const generateScriptOutline = async (topic: string, wordCount: string, la
     }
 };
 
-export const generateTopicSuggestions = async (theme: string): Promise<string[]> => {
+export const generateTopicSuggestions = async (theme: string): Promise<TopicSuggestionItem[]> => {
     if (!theme.trim()) return [];
-    const prompt = `Based on the central theme "${theme}", generate exactly 10 specific, engaging, and SEO-friendly YouTube video titles in Vietnamese. The titles should be diverse and cover different angles of the theme.`;
+    const prompt = `Based on the central theme "${theme}", generate exactly 5 specific, engaging, and SEO-friendly YouTube video ideas in Vietnamese. Each idea must include a 'title' (a catchy title) and an 'outline' (a 2-3 sentence summary of the key points for the video).`;
 
     try {
         const ai = getApiClient();
@@ -254,8 +264,21 @@ export const generateTopicSuggestions = async (theme: string): Promise<string[]>
                     properties: {
                         suggestions: {
                             type: Type.ARRAY,
-                            description: "A list of 10 video topic suggestions.",
-                            items: { type: Type.STRING }
+                            description: "A list of 5 video topic suggestions, each with a title and outline.",
+                            items: { 
+                                type: Type.OBJECT,
+                                properties: {
+                                    title: {
+                                        type: Type.STRING,
+                                        description: "The catchy YouTube video title."
+                                    },
+                                    outline: {
+                                        type: Type.STRING,
+                                        description: "A 2-3 sentence summary of the video's key points."
+                                    }
+                                },
+                                required: ['title', 'outline']
+                            }
                         }
                     },
                     required: ['suggestions']
@@ -264,8 +287,8 @@ export const generateTopicSuggestions = async (theme: string): Promise<string[]>
         });
         
         const jsonResponse = JSON.parse(response.text);
-        const suggestions: string[] = jsonResponse.suggestions;
-        if (!Array.isArray(suggestions) || suggestions.some(s => typeof s !== 'string')) {
+        const suggestions: TopicSuggestionItem[] = jsonResponse.suggestions;
+        if (!Array.isArray(suggestions) || suggestions.some(s => typeof s.title !== 'string' || typeof s.outline !== 'string')) {
              throw new Error("AI returned data in an unexpected format.");
         }
         return suggestions;
@@ -275,9 +298,9 @@ export const generateTopicSuggestions = async (theme: string): Promise<string[]>
     }
 };
 
-export const generateKeywordSuggestions = async (topic: string): Promise<string[]> => {
-    if (!topic.trim()) return [];
-    const prompt = `Based on the central video topic "${topic}", generate at least 5 relevant, SEO-friendly keywords. The keywords should be in Vietnamese.`;
+export const generateKeywordSuggestions = async (title: string, outlineContent: string): Promise<string[]> => {
+    if (!title.trim()) return [];
+    const prompt = `Based on the video title "${title}" and the outline "${outlineContent}", generate at least 5 relevant, SEO-friendly keywords. The keywords should be in Vietnamese.`;
 
     try {
         const ai = getApiClient();
@@ -323,6 +346,7 @@ export const reviseScript = async (originalScript: string, revisionInstruction: 
 
     const prompt = `
       You are an expert script editor. Your task is to revise the following script based on the user's instructions.
+      **Video Title for Context:** "${params.title}"
       **Script Type Context:** ${scriptTypeInstruction}
       **Original Script:**
       """
@@ -352,7 +376,7 @@ export const reviseScript = async (originalScript: string, revisionInstruction: 
     }
 };
 
-export const generateScriptPart = async (fullOutline: string, previousPartsScript: string, currentPartOutline: string, params: Omit<GenerationParams, 'topic'>): Promise<string> => {
+export const generateScriptPart = async (fullOutline: string, previousPartsScript: string, currentPartOutline: string, params: Omit<GenerationParams, 'title' | 'outlineContent'>): Promise<string> => {
     const { targetAudience, styleOptions, keywords, formattingOptions } = params;
     const { tone, style, voice } = styleOptions;
     const { headings, bullets, bold } = formattingOptions;
@@ -618,15 +642,16 @@ export const summarizeScriptForScenes = async (script: string): Promise<ScriptPa
     }
 };
 
-export const suggestStyleOptions = async (topic: string): Promise<StyleOptions> => {
+export const suggestStyleOptions = async (title: string, outlineContent: string): Promise<StyleOptions> => {
     const toneValues = TONE_OPTIONS.map(o => o.value);
     const styleValues = STYLE_OPTIONS.map(o => o.value);
     const voiceValues = VOICE_OPTIONS.map(o => o.value);
 
     const prompt = `
-        You are an expert YouTube content strategist. Based on the video topic provided, your task is to suggest the most suitable Tone, Style, and Voice for the script.
+        You are an expert YouTube content strategist. Based on the video title and outline provided, your task is to suggest the most suitable Tone, Style, and Voice for the script.
 
-        **Video Topic:** "${topic}"
+        **Video Title:** "${title}"
+        **Video Outline/Description:** "${outlineContent}"
 
         You MUST choose exactly one option for each category from the provided lists.
 

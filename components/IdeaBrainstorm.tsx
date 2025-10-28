@@ -23,10 +23,11 @@ const getApiClient = (): GoogleGenAI => {
 }
 
 interface IdeaBrainstormProps {
-    setTopic: (topic: string) => void;
+    setTitle: (title: string) => void;
+    setOutlineContent: (content: string) => void;
 }
 
-export const IdeaBrainstorm: React.FC<IdeaBrainstormProps> = ({ setTopic }) => {
+export const IdeaBrainstorm: React.FC<IdeaBrainstormProps> = ({ setTitle, setOutlineContent }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<ChatMessage[]>([
         { role: 'model', content: 'Chào bạn! Bạn đang muốn tìm ý tưởng cho video về chủ đề gì?' }
@@ -45,7 +46,7 @@ export const IdeaBrainstorm: React.FC<IdeaBrainstormProps> = ({ setTopic }) => {
             chatRef.current = ai.chats.create({
                 model: 'gemini-2.5-flash',
                 config: {
-                    systemInstruction: 'You are a creative assistant for a Vietnamese YouTuber. Your goal is to help the user brainstorm and refine their video ideas through a friendly, encouraging conversation. Ask clarifying questions to help them narrow down their topic. Keep your responses concise and in Vietnamese. When you propose a clear, actionable video title or topic, format it like this: **[Idea]: Tiêu đề video ở đây**.'
+                    systemInstruction: 'You are a creative assistant for a Vietnamese YouTuber. Your goal is to help the user brainstorm and refine their video ideas through a friendly, encouraging conversation. Ask clarifying questions. When you propose a clear, actionable video idea, you MUST format it strictly as follows, with the title on the first line and the outline on the second:\n**[Idea]: Tiêu đề video ở đây**\nNội dung phác họa cho tiêu đề đó.'
                 }
             });
             if (isMounted.current) setError(null);
@@ -109,18 +110,25 @@ export const IdeaBrainstorm: React.FC<IdeaBrainstormProps> = ({ setTopic }) => {
         }
     };
     
-    const handleUseIdea = (idea: string) => {
-        // Extract content from markdown bold or the special format
-        const match = idea.match(/\*\*\[Idea\]: (.*?)\*\*|\[Idea\]: (.*)/);
-        if (match) {
-            setTopic(match[1] || match[2]);
-        } else {
-             setTopic(idea);
+    const handleUseIdea = (content: string) => {
+        const lines = content.split('\n');
+        const titleLine = lines.find(line => line.includes('**[Idea]:'));
+        
+        if (titleLine) {
+            const titleMatch = titleLine.match(/\*\*\[Idea\]: (.*?)\*\*/);
+            const ideaTitle = titleMatch ? titleMatch[1].trim() : '';
+
+            // The rest of the content is the outline
+            const outline = lines.filter(line => !line.includes('**[Idea]:')).join('\n').trim();
+
+            setTitle(ideaTitle);
+            setOutlineContent(outline);
+            setIsOpen(false);
         }
     };
 
     return (
-        <div className="mt-4 bg-primary/70 rounded-lg border border-secondary">
+        <div className="mt-2 bg-primary/70 rounded-lg border border-secondary">
             <button 
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full flex justify-between items-center p-3 text-left"

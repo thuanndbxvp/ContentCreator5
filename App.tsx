@@ -8,7 +8,7 @@ import { VisualPromptModal } from './components/VisualPromptModal';
 import { AllVisualPromptsModal } from './components/AllVisualPromptsModal';
 import { SummarizeModal } from './components/SummarizeModal';
 import { generateScript, generateScriptOutline, generateTopicSuggestions, reviseScript, generateScriptPart, extractDialogue, generateKeywordSuggestions, validateApiKey, generateVisualPrompt, generateAllVisualPrompts, summarizeScriptForScenes, suggestStyleOptions } from './services/geminiService';
-import type { StyleOptions, FormattingOptions, LibraryItem, GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, ScriptType, NumberOfSpeakers, CachedData } from './types';
+import type { StyleOptions, FormattingOptions, LibraryItem, GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, ScriptType, NumberOfSpeakers, CachedData, TopicSuggestionItem } from './types';
 import { TONE_OPTIONS, STYLE_OPTIONS, VOICE_OPTIONS, LANGUAGE_OPTIONS } from './constants';
 import { BookOpenIcon } from './components/icons/BookOpenIcon';
 
@@ -37,7 +37,8 @@ const THEMES = [
 
 
 const App: React.FC = () => {
-  const [topic, setTopic] = useState<string>('');
+  const [title, setTitle] = useState<string>('');
+  const [outlineContent, setOutlineContent] = useState<string>('');
   const [targetAudience, setTargetAudience] = useState<string>(LANGUAGE_OPTIONS[0].value);
   const [styleOptions, setStyleOptions] = useState<StyleOptions>({
     tone: TONE_OPTIONS[2].value,
@@ -56,12 +57,14 @@ const App: React.FC = () => {
   const [scriptParts, setScriptParts] = useState<string>('Auto');
   const [scriptType, setScriptType] = useState<ScriptType>('Video');
   const [numberOfSpeakers, setNumberOfSpeakers] = useState<NumberOfSpeakers>('Auto');
+  const [lengthType, setLengthType] = useState<'words' | 'duration'>('words');
+  const [videoDuration, setVideoDuration] = useState<string>('5');
 
   const [generatedScript, setGeneratedScript] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   
-  const [topicSuggestions, setTopicSuggestions] = useState<string[]>([]);
+  const [topicSuggestions, setTopicSuggestions] = useState<TopicSuggestionItem[]>([]);
   const [isSuggesting, setIsSuggesting] = useState<boolean>(false);
   const [suggestionError, setSuggestionError] = useState<string | null>(null);
 
@@ -196,7 +199,7 @@ const App: React.FC = () => {
   };
 
   const handleSaveToLibrary = useCallback(() => {
-    if (!generatedScript.trim() || !topic.trim()) return;
+    if (!generatedScript.trim() || !title.trim()) return;
 
     const cachedData: CachedData = {
         visualPrompts: Object.fromEntries(visualPromptsCache),
@@ -210,7 +213,8 @@ const App: React.FC = () => {
 
     const newItem: LibraryItem = {
       id: Date.now(),
-      topic: topic,
+      title: title,
+      outlineContent: outlineContent,
       script: generatedScript,
       cachedData: cachedData,
     };
@@ -220,7 +224,7 @@ const App: React.FC = () => {
     localStorage.setItem('yt-script-library', JSON.stringify(updatedLibrary));
     setHasSavedToLibrary(true);
   }, [
-    generatedScript, topic, library, visualPromptsCache, allVisualPromptsCache, 
+    generatedScript, title, outlineContent, library, visualPromptsCache, allVisualPromptsCache, 
     summarizedScriptCache, extractedDialogueCache, hasExtractedDialogue, 
     hasGeneratedAllVisualPrompts, hasSummarizedScript
   ]);
@@ -234,7 +238,8 @@ const App: React.FC = () => {
   const handleLoadScript = useCallback((item: LibraryItem) => {
     resetCachesAndStates();
 
-    setTopic(item.topic);
+    setTitle(item.title);
+    setOutlineContent(item.outlineContent);
     setGeneratedScript(item.script);
 
     if (item.cachedData) {
@@ -252,8 +257,8 @@ const App: React.FC = () => {
   }, []);
 
   const handleGenerateSuggestions = useCallback(async () => {
-    if (!topic.trim()) {
-      setSuggestionError('Vui lòng nhập chủ đề chính để nhận gợi ý.');
+    if (!title.trim()) {
+      setSuggestionError('Vui lòng nhập Tiêu đề Video để nhận gợi ý.');
       return;
     }
     setIsSuggesting(true);
@@ -261,18 +266,18 @@ const App: React.FC = () => {
     setTopicSuggestions([]);
 
     try {
-      const suggestions = await generateTopicSuggestions(topic);
+      const suggestions = await generateTopicSuggestions(title);
       setTopicSuggestions(suggestions);
     } catch (err) {
       setSuggestionError(err instanceof Error ? err.message : 'Lỗi không xác định khi tạo gợi ý.');
     } finally {
       setIsSuggesting(false);
     }
-  }, [topic]);
+  }, [title]);
 
   const handleGenerateKeywordSuggestions = useCallback(async () => {
-    if (!topic.trim()) {
-      setKeywordSuggestionError('Vui lòng nhập chủ đề chính để nhận gợi ý từ khóa.');
+    if (!title.trim()) {
+      setKeywordSuggestionError('Vui lòng nhập Tiêu đề Video để nhận gợi ý từ khóa.');
       return;
     }
     setIsSuggestingKeywords(true);
@@ -280,36 +285,36 @@ const App: React.FC = () => {
     setKeywordSuggestions([]);
 
     try {
-      const suggestions = await generateKeywordSuggestions(topic);
+      const suggestions = await generateKeywordSuggestions(title, outlineContent);
       setKeywordSuggestions(suggestions);
     } catch (err) {
       setKeywordSuggestionError(err instanceof Error ? err.message : 'Lỗi không xác định khi tạo gợi ý từ khóa.');
     } finally {
       setIsSuggestingKeywords(false);
     }
-  }, [topic]);
+  }, [title, outlineContent]);
 
   const handleSuggestStyleOptions = useCallback(async () => {
-    if (!topic.trim()) {
-      setStyleSuggestionError('Vui lòng nhập chủ đề chính trước.');
+    if (!title.trim()) {
+      setStyleSuggestionError('Vui lòng nhập Tiêu đề Video trước.');
       return;
     }
     setIsSuggestingStyle(true);
     setStyleSuggestionError(null);
 
     try {
-      const suggestedOptions = await suggestStyleOptions(topic);
+      const suggestedOptions = await suggestStyleOptions(title, outlineContent);
       setStyleOptions(suggestedOptions);
     } catch (err) {
       setStyleSuggestionError(err instanceof Error ? err.message : 'Lỗi không xác định khi tạo gợi ý phong cách.');
     } finally {
       setIsSuggestingStyle(false);
     }
-  }, [topic]);
+  }, [title, outlineContent]);
 
   const handleGenerateScript = useCallback(async () => {
-    if (!topic.trim()) {
-      setError('Vui lòng nhập hoặc chọn một chủ đề video cụ thể.');
+    if (!title.trim()) {
+      setError('Vui lòng nhập hoặc chọn một tiêu đề video.');
       return;
     }
     setIsLoading(true);
@@ -319,13 +324,19 @@ const App: React.FC = () => {
     setRevisionCount(0);
     resetCachesAndStates();
 
+    const finalWordCount = lengthType === 'duration' && videoDuration
+      ? (parseInt(videoDuration, 10) * 150).toString()
+      : wordCount;
+
+    const params: GenerationParams = { title, outlineContent, targetAudience, styleOptions, keywords, formattingOptions, wordCount: finalWordCount, scriptParts, scriptType, numberOfSpeakers };
+
     try {
-      const isLongScript = parseInt(wordCount, 10) > 1000 && scriptType === 'Video';
+      const isLongScript = parseInt(finalWordCount, 10) > 1000 && scriptType === 'Video';
       if (isLongScript) {
-        const outline = await generateScriptOutline(topic, wordCount, targetAudience);
+        const outline = await generateScriptOutline(params);
         setGeneratedScript(outline);
       } else {
-        const script = await generateScript({ topic, targetAudience, styleOptions, keywords, formattingOptions, wordCount, scriptParts, scriptType, numberOfSpeakers });
+        const script = await generateScript(params);
         setGeneratedScript(script);
       }
     } catch (err) {
@@ -333,7 +344,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [topic, targetAudience, styleOptions, keywords, formattingOptions, wordCount, scriptParts, scriptType, numberOfSpeakers]);
+  }, [title, outlineContent, targetAudience, styleOptions, keywords, formattingOptions, wordCount, scriptParts, scriptType, numberOfSpeakers, lengthType, videoDuration]);
   
   const handleReviseScript = useCallback(async () => {
     if (!revisionPrompt.trim() || !generatedScript.trim()) {
@@ -344,7 +355,11 @@ const App: React.FC = () => {
     setError(null);
     resetCachesAndStates();
 
-    const params: GenerationParams = { topic, targetAudience, styleOptions, keywords, formattingOptions, wordCount, scriptParts, scriptType, numberOfSpeakers };
+    const finalWordCount = lengthType === 'duration' && videoDuration
+      ? (parseInt(videoDuration, 10) * 150).toString()
+      : wordCount;
+
+    const params: GenerationParams = { title, outlineContent, targetAudience, styleOptions, keywords, formattingOptions, wordCount: finalWordCount, scriptParts, scriptType, numberOfSpeakers };
 
     try {
       const revisedScript = await reviseScript(generatedScript, revisionPrompt, params);
@@ -356,7 +371,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [revisionPrompt, generatedScript, topic, targetAudience, styleOptions, keywords, formattingOptions, wordCount, scriptParts, scriptType, numberOfSpeakers]);
+  }, [revisionPrompt, generatedScript, title, outlineContent, targetAudience, styleOptions, keywords, formattingOptions, wordCount, scriptParts, scriptType, numberOfSpeakers, lengthType, videoDuration]);
 
   const handleGenerateNextPart = useCallback(async () => {
       if (!isGeneratingSequentially || currentPartIndex >= outlineParts.length) {
@@ -366,9 +381,13 @@ const App: React.FC = () => {
       setIsLoading(true);
       setError(null);
       try {
+          const finalWordCount = lengthType === 'duration' && videoDuration
+            ? (parseInt(videoDuration, 10) * 150).toString()
+            : wordCount;
+          
           const fullOutline = outlineParts.join('\n');
           const currentPartOutline = outlineParts[currentPartIndex];
-          const params = { targetAudience, styleOptions, keywords, formattingOptions, wordCount, scriptParts, scriptType, numberOfSpeakers };
+          const params = { title, outlineContent, targetAudience, styleOptions, keywords, formattingOptions, wordCount: finalWordCount, scriptParts, scriptType, numberOfSpeakers };
           const newPart = await generateScriptPart(fullOutline, generatedScript, currentPartOutline, params);
           
           setGeneratedScript(prev => (prev ? prev + '\n\n' : '') + newPart);
@@ -385,7 +404,7 @@ const App: React.FC = () => {
       } finally {
           setIsLoading(false);
       }
-  }, [currentPartIndex, outlineParts, isGeneratingSequentially, generatedScript, targetAudience, styleOptions, keywords, formattingOptions, wordCount, scriptParts, scriptType, numberOfSpeakers]);
+  }, [currentPartIndex, outlineParts, isGeneratingSequentially, generatedScript, title, outlineContent, targetAudience, styleOptions, keywords, formattingOptions, wordCount, scriptParts, scriptType, numberOfSpeakers, lengthType, videoDuration]);
   
   const handleStartSequentialGeneration = useCallback(() => {
     if (!generatedScript.trim() || !generatedScript.includes("### Dàn Ý Chi Tiết")) {
@@ -538,12 +557,12 @@ const App: React.FC = () => {
       <header className="bg-secondary/50 border-b border-secondary p-4 shadow-lg flex justify-between items-center">
         <div className="flex-1"></div>
         <div className="flex-1 text-center">
-            <div className="flex justify-center items-center gap-3">
+            <a href="/" className="inline-flex justify-center items-center gap-3 no-underline transition-opacity hover:opacity-80" style={{ textDecoration: 'none' }}>
               <YoutubeLogoIcon />
               <h1 className="text-2xl font-bold text-accent">
                 Trợ lý Sáng tạo Kịch bản YouTube
               </h1>
-            </div>
+            </a>
             <p className="text-text-secondary mt-1 text-sm md:text-base">
               Tạo kịch bản hoàn hảo cho video tiếp theo của bạn.
             </p>
@@ -603,8 +622,10 @@ const App: React.FC = () => {
       <main className="flex flex-col md:flex-row gap-6 p-4 md:p-6 max-w-7xl mx-auto">
         <div className="w-full md:w-2/5 lg:w-1/3 flex-shrink-0">
           <ControlPanel
-            topic={topic}
-            setTopic={setTopic}
+            title={title}
+            setTitle={setTitle}
+            outlineContent={outlineContent}
+            setOutlineContent={setOutlineContent}
             onGenerateSuggestions={handleGenerateSuggestions}
             isSuggesting={isSuggesting}
             suggestions={topicSuggestions}
@@ -634,6 +655,10 @@ const App: React.FC = () => {
             onSuggestStyle={handleSuggestStyleOptions}
             isSuggestingStyle={isSuggestingStyle}
             styleSuggestionError={styleSuggestionError}
+            lengthType={lengthType}
+            setLengthType={setLengthType}
+            videoDuration={videoDuration}
+            setVideoDuration={setVideoDuration}
           />
         </div>
         <div className="w-full md:w-3/5 lg:w-2/3">

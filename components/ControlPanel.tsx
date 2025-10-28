@@ -1,18 +1,20 @@
 import React from 'react';
 import { OptionSelector } from './OptionSelector';
 import { SparklesIcon } from './icons/SparklesIcon';
-import type { StyleOptions, FormattingOptions, Tone, Style, Voice, ScriptType, NumberOfSpeakers } from '../types';
+import type { StyleOptions, FormattingOptions, Tone, Style, Voice, ScriptType, NumberOfSpeakers, TopicSuggestionItem } from '../types';
 import { TONE_OPTIONS, STYLE_OPTIONS, VOICE_OPTIONS, LANGUAGE_OPTIONS, SCRIPT_TYPE_OPTIONS, NUMBER_OF_SPEAKERS_OPTIONS } from '../constants';
 import { IdeaBrainstorm } from './IdeaBrainstorm';
 import { Tooltip } from './Tooltip';
 import { TONE_EXPLANATIONS, STYLE_EXPLANATIONS, VOICE_EXPLANATIONS, FORMATTING_EXPLANATIONS } from '../constants/explanations';
 
 interface ControlPanelProps {
-  topic: string;
-  setTopic: (topic: string) => void;
+  title: string;
+  setTitle: (title: string) => void;
+  outlineContent: string;
+  setOutlineContent: (content: string) => void;
   onGenerateSuggestions: () => void;
   isSuggesting: boolean;
-  suggestions: string[];
+  suggestions: TopicSuggestionItem[];
   suggestionError: string | null;
   targetAudience: string;
   setTargetAudience: (audience: string) => void;
@@ -39,10 +41,15 @@ interface ControlPanelProps {
   onSuggestStyle: () => void;
   isSuggestingStyle: boolean;
   styleSuggestionError: string | null;
+  lengthType: 'words' | 'duration';
+  setLengthType: (type: 'words' | 'duration') => void;
+  videoDuration: string;
+  setVideoDuration: (duration: string) => void;
 }
 
 export const ControlPanel: React.FC<ControlPanelProps> = ({
-  topic, setTopic,
+  title, setTitle,
+  outlineContent, setOutlineContent,
   onGenerateSuggestions, isSuggesting, suggestions, suggestionError,
   targetAudience, setTargetAudience,
   styleOptions, setStyleOptions,
@@ -54,7 +61,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   onGenerateKeywordSuggestions, isSuggestingKeywords, keywordSuggestions, keywordSuggestionError,
   scriptType, setScriptType,
   numberOfSpeakers, setNumberOfSpeakers,
-  onSuggestStyle, isSuggestingStyle, styleSuggestionError
+  onSuggestStyle, isSuggestingStyle, styleSuggestionError,
+  lengthType, setLengthType, videoDuration, setVideoDuration,
 }) => {
   const handleCheckboxChange = (key: keyof FormattingOptions, value: boolean) => {
     setFormattingOptions({ ...formattingOptions, [key]: value });
@@ -67,19 +75,27 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   return (
     <div className="bg-secondary rounded-lg p-6 shadow-xl space-y-6">
       <div>
-        <label htmlFor="topic" className="block text-sm font-medium text-text-secondary mb-2">1. Chủ đề</label>
-        <textarea
-          id="topic"
-          rows={3}
+        <label htmlFor="title" className="block text-sm font-medium text-text-secondary mb-2">1. Ý tưởng chính</label>
+        <input
+          id="title"
+          type="text"
           className="w-full bg-primary/70 border border-secondary rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition"
-          placeholder="Nhập ý tưởng chung, VD: 'Tương lai của du hành vũ trụ'"
-          value={topic}
-          onChange={(e) => setTopic(e.target.value)}
+          placeholder="Nhập Tiêu đề Video, VD: 'Tương lai của du hành vũ trụ'"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
         />
-        <IdeaBrainstorm setTopic={setTopic} />
+        <textarea
+          id="outline"
+          rows={4}
+          className="mt-2 w-full bg-primary/70 border border-secondary rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition"
+          placeholder="Phác họa nội dung (tùy chọn), VD: 'Đề cập đến SpaceX, Blue Origin. Các thách thức về công nghệ. Tầm nhìn 50 năm tới.'"
+          value={outlineContent}
+          onChange={(e) => setOutlineContent(e.target.value)}
+        />
+        <IdeaBrainstorm setTitle={setTitle} setOutlineContent={setOutlineContent} />
         <button 
           onClick={onGenerateSuggestions} 
-          disabled={isSuggesting || !topic}
+          disabled={isSuggesting || !title}
           className="w-full mt-4 flex items-center justify-center bg-secondary hover:bg-primary disabled:bg-primary/50 disabled:cursor-not-allowed text-text-primary font-bold py-2 px-4 rounded-lg transition"
         >
           {isSuggesting ? (
@@ -100,11 +116,19 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         {suggestionError && <p className="text-red-400 text-sm mt-2">{suggestionError}</p>}
         {suggestions.length > 0 && (
             <div className="mt-4 space-y-2">
-                <p className="text-sm font-medium text-text-secondary">Chọn một chủ đề hoặc giữ nguyên chủ đề của bạn:</p>
+                <p className="text-sm font-medium text-text-secondary">Chọn một gợi ý hoặc giữ nguyên ý tưởng của bạn:</p>
                 <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
                     {suggestions.map((suggestion, index) => (
-                        <button key={index} onClick={() => setTopic(suggestion)} className="text-left text-sm w-full p-2 rounded-md bg-primary/70 hover:bg-primary text-text-secondary hover:text-text-primary transition">
-                            {suggestion}
+                        <button 
+                          key={index} 
+                          onClick={() => {
+                            setTitle(suggestion.title);
+                            setOutlineContent(suggestion.outline);
+                          }} 
+                          className="text-left text-sm w-full p-3 rounded-md bg-primary/70 hover:bg-primary text-text-secondary hover:text-text-primary transition"
+                        >
+                          <strong className="text-text-primary block">{suggestion.title}</strong>
+                          <span className="text-xs mt-1 block">{suggestion.outline}</span>
                         </button>
                     ))}
                 </div>
@@ -124,7 +148,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         />
         <button 
           onClick={onGenerateKeywordSuggestions} 
-          disabled={isSuggestingKeywords || !topic}
+          disabled={isSuggestingKeywords || !title}
           className="w-full mt-2 flex items-center justify-center bg-secondary/70 hover:bg-primary disabled:bg-primary/50 disabled:cursor-not-allowed text-text-secondary py-2 px-4 rounded-lg transition text-sm"
         >
           {isSuggestingKeywords ? (
@@ -203,7 +227,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
       <div className="pt-4 mt-4 border-t border-primary/50">
         <button 
             onClick={onSuggestStyle}
-            disabled={isSuggestingStyle || !topic}
+            disabled={isSuggestingStyle || !title}
             className="w-full mb-4 flex items-center justify-center bg-secondary hover:bg-primary disabled:bg-primary/50 disabled:cursor-not-allowed text-text-primary font-semibold py-2 px-4 rounded-lg transition"
         >
             {isSuggestingStyle ? (
@@ -250,18 +274,53 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
 
       <div>
         <label className="block text-sm font-medium text-text-secondary mb-2">{scriptType === 'Podcast' ? '9' : '8'}. Cấu trúc & Định dạng</label>
+        
+        <div className="flex bg-primary/70 rounded-lg p-1 mb-4">
+            <button
+                onClick={() => setLengthType('words')}
+                className={`w-full py-2 text-sm font-semibold rounded-md transition-colors ${
+                    lengthType === 'words' ? 'bg-accent text-white' : 'text-text-secondary hover:bg-primary'
+                }`}
+            >
+                Theo số từ
+            </button>
+            <button
+                onClick={() => setLengthType('duration')}
+                className={`w-full py-2 text-sm font-semibold rounded-md transition-colors ${
+                    lengthType === 'duration' ? 'bg-accent text-white' : 'text-text-secondary hover:bg-primary'
+                }`}
+            >
+                Theo thời lượng
+            </button>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Tooltip text={FORMATTING_EXPLANATIONS.wordCount}>
-                <div>
-                    <label htmlFor="wordCount" className="block text-xs font-medium text-text-secondary mb-1">Tổng số từ</label>
-                    <input id="wordCount" type="number" value={wordCount} onChange={e => setWordCount(e.target.value)} className="w-full bg-primary/70 border border-secondary rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition" placeholder="VD: 800"/>
-                    {scriptType === 'Video' && parseInt(wordCount, 10) > 1000 && (
-                        <p className="text-xs text-amber-400 mt-2">
-                            Lưu ý: Với kịch bản dài (&gt;1000 từ), AI sẽ tạo một dàn ý chi tiết để đảm bảo chất lượng.
-                        </p>
-                    )}
-                </div>
-            </Tooltip>
+            {lengthType === 'words' ? (
+                <Tooltip text={FORMATTING_EXPLANATIONS.wordCount}>
+                    <div>
+                        <label htmlFor="wordCount" className="block text-xs font-medium text-text-secondary mb-1">Tổng số từ</label>
+                        <input id="wordCount" type="number" value={wordCount} onChange={e => setWordCount(e.target.value)} className="w-full bg-primary/70 border border-secondary rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition" placeholder="VD: 800"/>
+                        {scriptType === 'Video' && parseInt(wordCount, 10) > 1000 && (
+                            <p className="text-xs text-amber-400 mt-2">
+                                Lưu ý: Với kịch bản dài (&gt;1000 từ), AI sẽ tạo một dàn ý chi tiết để đảm bảo chất lượng.
+                            </p>
+                        )}
+                    </div>
+                </Tooltip>
+            ) : (
+                <Tooltip text={FORMATTING_EXPLANATIONS.videoDuration}>
+                    <div>
+                        <label htmlFor="videoDuration" className="block text-xs font-medium text-text-secondary mb-1">Thời lượng video (phút)</label>
+                        <input id="videoDuration" type="number" value={videoDuration} onChange={e => setVideoDuration(e.target.value)} className="w-full bg-primary/70 border border-secondary rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition" placeholder="VD: 5"/>
+                         {scriptType === 'Video' && videoDuration && (parseInt(videoDuration, 10) * 150) > 1000 && (
+                             <p className="text-xs text-amber-400 mt-2">
+                                Lưu ý: Với kịch bản dài (&gt;1000 từ), AI sẽ tạo một dàn ý chi tiết để đảm bảo chất lượng.
+                            </p>
+                        )}
+                    </div>
+                </Tooltip>
+            )}
+
             {scriptType === 'Video' && (
               <Tooltip text={FORMATTING_EXPLANATIONS.scriptParts}>
                   <div>
@@ -326,7 +385,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
 
       <button
         onClick={onGenerate}
-        disabled={isLoading || !topic}
+        disabled={isLoading || !title}
         className="w-full flex items-center justify-center bg-accent hover:bg-indigo-500 disabled:bg-indigo-400/50 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-transform duration-200 ease-in-out transform hover:scale-105"
       >
         {isLoading ? (
