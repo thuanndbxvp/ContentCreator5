@@ -13,6 +13,7 @@ interface SummarizeModalProps {
   isLoading: boolean;
   error: string | null;
   scriptType: ScriptType;
+  title: string;
 }
 
 const LoadingSkeleton: React.FC = () => (
@@ -60,7 +61,7 @@ const CopyButton: React.FC<{ text: string }> = ({ text }) => {
     );
 };
 
-export const SummarizeModal: React.FC<SummarizeModalProps> = ({ isOpen, onClose, summary, isLoading, error, scriptType }) => {
+export const SummarizeModal: React.FC<SummarizeModalProps> = ({ isOpen, onClose, summary, isLoading, error, scriptType, title }) => {
     if (!isOpen) return null;
 
     const handleDownloadExcel = () => {
@@ -84,7 +85,11 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ isOpen, onClose,
         const worksheet = XLSX.utils.aoa_to_sheet([header, ...data]);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Prompts Tóm Tắt');
-        XLSX.writeFile(workbook, 'youtube_script_summary_prompts.xlsx');
+        
+        const sanitizedTitle = title.replace(/[^a-z0-9_-\s]/gi, '').trim().replace(/\s+/g, '_');
+        const fileName = `Prompt_${sanitizedTitle || 'untitled'}.xlsx`;
+        
+        XLSX.writeFile(workbook, fileName);
     };
 
     return (
@@ -97,7 +102,7 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ isOpen, onClose,
                 onClick={e => e.stopPropagation()}
             >
                 <div className="flex justify-between items-center p-4 border-b border-primary">
-                    <h2 className="text-xl font-bold text-accent">Tóm tắt Kịch bản thành Cảnh quay</h2>
+                    <h2 className="text-xl font-bold text-accent">Chuyển thể Kịch bản thành Cảnh quay</h2>
                     <button onClick={onClose} className="text-text-secondary hover:text-text-primary text-2xl font-bold">&times;</button>
                 </div>
                 <div className="p-6 overflow-y-auto flex-grow">

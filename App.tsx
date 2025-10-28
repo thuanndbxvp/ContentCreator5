@@ -734,6 +734,7 @@ const App: React.FC = () => {
         isLoading={isSummarizing}
         error={summarizationError}
         scriptType={scriptType}
+        title={title}
       />
     </div>
   );
