@@ -420,31 +420,31 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             <Tooltip text={FORMATTING_EXPLANATIONS.includeIntro} className="block">
                 <label className="flex items-center space-x-2 cursor-pointer">
                     <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" checked={formattingOptions.includeIntro} onChange={(e) => handleCheckboxChange('includeIntro', e.target.checked)} />
-                    <span className="text-text-primary">Bao gồm Intro</span>
+                    <span className="text-text-primary">Intro</span>
                 </label>
             </Tooltip>
              <Tooltip text={FORMATTING_EXPLANATIONS.includeOutro} className="block">
                 <label className="flex items-center space-x-2 cursor-pointer">
                     <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" checked={formattingOptions.includeOutro} onChange={(e) => handleCheckboxChange('includeOutro', e.target.checked)} />
-                    <span className="text-text-primary">Bao gồm Outro</span>
+                    <span className="text-text-primary">Outro</span>
                 </label>
             </Tooltip>
             <Tooltip text={FORMATTING_EXPLANATIONS.headings} className="block">
                 <label className="flex items-center space-x-2 cursor-pointer">
                     <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" checked={formattingOptions.headings} onChange={(e) => handleCheckboxChange('headings', e.target.checked)} />
-                    <span className="text-text-primary capitalize">Sử dụng Tiêu đề</span>
+                    <span className="text-text-primary">Tiêu đề</span>
                 </label>
             </Tooltip>
             <Tooltip text={FORMATTING_EXPLANATIONS.bullets} className="block">
                 <label className="flex items-center space-x-2 cursor-pointer">
                     <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" checked={formattingOptions.bullets} onChange={(e) => handleCheckboxChange('bullets', e.target.checked)} />
-                    <span className="text-text-primary capitalize">Sử dụng Gạch đầu dòng</span>
+                    <span className="text-text-primary">Gạch đầu dòng</span>
                 </label>
             </Tooltip>
              <Tooltip text={FORMATTING_EXPLANATIONS.bold} className="block">
                 <label className="flex items-center space-x-2 cursor-pointer">
                     <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" checked={formattingOptions.bold} onChange={(e) => handleCheckboxChange('bold', e.target.checked)} />
-                    <span className="text-text-primary capitalize">Sử dụng In đậm/nghiêng</span>
+                    <span className="text-text-primary">In đậm/nghiêng</span>
                 </label>
             </Tooltip>
         </div>
