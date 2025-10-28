@@ -131,13 +131,11 @@ export const IdeaBrainstorm: React.FC<IdeaBrainstormProps> = ({ setTitle, setOut
         <div className="mt-2 bg-primary/70 rounded-lg border border-secondary">
             <button 
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex justify-between items-center p-3 text-left"
+                className="w-full flex justify-center items-center gap-2 p-3"
                 aria-expanded={isOpen}
             >
-                <div className="flex items-center gap-2">
-                    <SparklesIcon className="w-5 h-5 text-accent"/>
-                    <span className="font-semibold text-text-primary">Brainstorm Ý Tưởng với AI</span>
-                </div>
+                <SparklesIcon className="w-5 h-5 text-accent"/>
+                <span className="font-semibold text-text-primary">Brainstorm Ý Tưởng với AI</span>
                 <svg className={`w-5 h-5 text-text-secondary transition-transform ${isOpen ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>

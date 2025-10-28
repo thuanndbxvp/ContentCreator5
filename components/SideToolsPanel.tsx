@@ -51,7 +51,7 @@ export const SideToolsPanel: React.FC<SideToolsPanelProps> = ({
                 <div className="bg-secondary rounded-lg p-6 shadow-xl space-y-4 sticky top-6">
                      <button 
                         onClick={onOpenLibrary}
-                        className="w-full flex items-center gap-2 px-4 py-2 bg-primary/70 hover:bg-primary text-text-primary font-semibold rounded-lg transition-colors"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary/70 hover:bg-primary text-text-primary font-semibold rounded-lg transition-colors"
                         aria-label="Mở thư viện"
                     >
                         <BookOpenIcon className="w-5 h-5"/>
