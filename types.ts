@@ -93,3 +93,8 @@ export interface ScriptPartSummary {
   partTitle: string;
   scenes: SceneSummary[];
 }
+
+export interface WordCountStats {
+  sections: { title: string; count: number }[];
+  total: number;
+}

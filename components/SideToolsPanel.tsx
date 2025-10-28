@@ -3,6 +3,7 @@ import { WordCountCheck } from './WordCountCheck';
 import { ScriptTools } from './ScriptTools';
 import { BookOpenIcon } from './icons/BookOpenIcon';
 import { CogIcon } from './icons/CogIcon';
+import type { WordCountStats } from '../types';
 
 // Combine all props needed for the side panel
 interface SideToolsPanelProps {
@@ -17,6 +18,9 @@ interface SideToolsPanelProps {
   hasSummarizedScript: boolean;
   onOpenLibrary: () => void;
   onOpenApiKeyModal: () => void;
+  onExtractAndCount: () => void;
+  wordCountStats: WordCountStats | null;
+  isExtracting: boolean;
 }
 
 export const SideToolsPanel: React.FC<SideToolsPanelProps> = ({
@@ -30,7 +34,10 @@ export const SideToolsPanel: React.FC<SideToolsPanelProps> = ({
     isSummarizing,
     hasSummarizedScript,
     onOpenLibrary,
-    onOpenApiKeyModal
+    onOpenApiKeyModal,
+    onExtractAndCount,
+    wordCountStats,
+    isExtracting,
 }) => {
 
     return (
@@ -57,7 +64,12 @@ export const SideToolsPanel: React.FC<SideToolsPanelProps> = ({
 
             {script && (
                 <>
-                    <WordCountCheck script={script} targetWordCount={targetWordCount} />
+                    <WordCountCheck
+                        stats={wordCountStats}
+                        targetWordCount={targetWordCount}
+                        onExtractAndCount={onExtractAndCount}
+                        isLoading={isExtracting}
+                    />
                     <ScriptTools 
                         revisionPrompt={revisionPrompt}
                         setRevisionPrompt={setRevisionPrompt}

@@ -10,7 +10,7 @@ import { SummarizeModal } from './components/SummarizeModal';
 import { SavedIdeasModal } from './components/SavedIdeasModal';
 import { SideToolsPanel } from './components/SideToolsPanel';
 import { generateScript, generateScriptOutline, generateTopicSuggestions, reviseScript, generateScriptPart, extractDialogue, generateKeywordSuggestions, validateApiKey, generateVisualPrompt, generateAllVisualPrompts, summarizeScriptForScenes, suggestStyleOptions, parseIdeasFromFile } from './services/aiService';
-import type { StyleOptions, FormattingOptions, LibraryItem, GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, ScriptType, NumberOfSpeakers, CachedData, TopicSuggestionItem, SavedIdea, AiProvider } from './types';
+import type { StyleOptions, FormattingOptions, LibraryItem, GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, ScriptType, NumberOfSpeakers, CachedData, TopicSuggestionItem, SavedIdea, AiProvider, WordCountStats } from './types';
 import { TONE_OPTIONS, STYLE_OPTIONS, VOICE_OPTIONS, LANGUAGE_OPTIONS, GEMINI_MODELS } from './constants';
 
 const YoutubeLogoIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -35,6 +35,57 @@ const THEMES = [
   { name: 'Green', color: '#22c55e' },
   { name: 'Blue', color: '#3b82f6' },
 ];
+
+const calculateWordCounts = (script: string): WordCountStats => {
+    if (!script) return { sections: [], total: 0 };
+
+    const cleanForVoiceOver = (text: string): string => {
+        return text
+            .replace(/^\s*[\w\d\s()]+:\s*/gm, '')
+            .replace(/\[.*?\]/g, '')
+            .replace(/(\*\*|\*|_)/g, '')
+            .replace(/---/g, '');
+    };
+    
+    const countWords = (text: string): number => {
+        if (!text) return 0;
+        return text.trim().split(/\s+/).filter(Boolean).length;
+    };
+
+    const sections = script.split(/(?=^(?:##|###)\s)/m).filter(s => s.trim());
+    let total = 0;
+
+    if (sections.length === 0 && script.trim().length > 0) {
+        const cleanedScript = cleanForVoiceOver(script);
+        const totalCount = countWords(cleanedScript);
+        return { sections: [{ title: 'Toàn bộ kịch bản', count: totalCount }], total: totalCount };
+    }
+    
+    if (sections.length === 0) {
+        return { sections: [], total: 0 };
+    }
+
+    const sectionCounts = sections.map((section, index) => {
+        const lines = section.split('\n').filter(Boolean);
+        let title = `Phần ${index + 1}`;
+        let content = section;
+
+        if (lines.length > 0 && (lines[0].startsWith('##') || lines[0].startsWith('###'))) {
+            title = lines[0].replace(/^[#\s]+/, '').trim();
+            content = lines.slice(1).join('\n');
+        } else if (index === 0) {
+             const hasOtherHeadings = sections.slice(1).some(s => s.trim().startsWith('##') || s.trim().startsWith('###'));
+             if(hasOtherHeadings || sections.length === 1) title = "Mở đầu";
+        }
+        
+        const cleanedContent = cleanForVoiceOver(content);
+        const count = countWords(cleanedContent);
+        total += count;
+        return { title, count };
+    });
+
+    return { sections: sectionCounts, total };
+};
 
 
 const App: React.FC = () => {
@@ -119,27 +170,24 @@ const App: React.FC = () => {
   const [isSummarizing, setIsSummarizing] = useState<boolean>(false);
   const [summarizationError, setSummarizationError] = useState<string | null>(null);
 
-  // AI Provider State
   const [aiProvider, setAiProvider] = useState<AiProvider>('gemini');
   const [selectedModel, setSelectedModel] = useState<string>(GEMINI_MODELS[1].value);
 
-
-  // Caching states
   const [visualPromptsCache, setVisualPromptsCache] = useState<Map<string, VisualPrompt>>(new Map());
   const [allVisualPromptsCache, setAllVisualPromptsCache] = useState<AllVisualPromptsResult[] | null>(null);
   const [summarizedScriptCache, setSummarizedScriptCache] = useState<ScriptPartSummary[] | null>(null);
   const [extractedDialogueCache, setExtractedDialogueCache] = useState<string | null>(null);
 
-  // Action completion states
   const [hasExtractedDialogue, setHasExtractedDialogue] = useState<boolean>(false);
   const [hasGeneratedAllVisualPrompts, setHasGeneratedAllVisualPrompts] = useState<boolean>(false);
   const [hasSummarizedScript, setHasSummarizedScript] = useState<boolean>(false);
   const [hasSavedToLibrary, setHasSavedToLibrary] = useState<boolean>(false);
 
-  // Theme state
   const [themeColor, setThemeColor] = useState<string>(THEMES[2].color);
   const [isThemeSelectorOpen, setIsThemeSelectorOpen] = useState<boolean>(false);
   const themeSelectorRef = useRef<HTMLDivElement>(null);
+
+  const [wordCountStats, setWordCountStats] = useState<WordCountStats | null>(null);
 
 
   useEffect(() => {
@@ -160,7 +208,6 @@ const App: React.FC = () => {
             });
         }
       } else {
-          // Migration from old key format
           const oldGeminiKeys = localStorage.getItem('gemini-api-keys');
           if(oldGeminiKeys) {
               const parsedOldKeys = JSON.parse(oldGeminiKeys);
@@ -208,7 +255,6 @@ const App: React.FC = () => {
   }, []);
   
   useEffect(() => {
-    // Reset suggestion completion status when core inputs change
     setHasGeneratedTopicSuggestions(false);
     setHasGeneratedKeywordSuggestions(false);
     setHasSuggestedStyle(false);
@@ -224,6 +270,7 @@ const App: React.FC = () => {
     setHasGeneratedAllVisualPrompts(false);
     setHasSummarizedScript(false);
     setHasSavedToLibrary(false);
+    setWordCountStats(null);
   };
 
 
@@ -303,7 +350,7 @@ const App: React.FC = () => {
         setHasSummarizedScript(item.cachedData.hasSummarizedScript);
     }
     
-    setHasSavedToLibrary(true); // Since it's loaded from the library, it's considered saved.
+    setHasSavedToLibrary(true);
     setIsLibraryOpen(false);
   }, []);
   
@@ -544,6 +591,15 @@ const App: React.FC = () => {
     }
   }, [generatedScript, targetAudience, extractedDialogueCache, aiProvider, selectedModel]);
 
+  const handleExtractAndCount = useCallback(async () => {
+    if (!generatedScript.trim()) return;
+
+    const stats = calculateWordCounts(generatedScript);
+    setWordCountStats(stats);
+    
+    await handleExtractDialogue();
+  }, [generatedScript, handleExtractDialogue]);
+
   const handleGenerateVisualPrompt = useCallback(async (scene: string) => {
     if (visualPromptsCache.has(scene)) {
         setVisualPrompt(visualPromptsCache.get(scene)!);
@@ -772,13 +828,10 @@ const App: React.FC = () => {
             currentPart={currentPartIndex}
             totalParts={outlineParts.length}
             revisionCount={revisionCount}
-            onExtractDialogue={handleExtractDialogue}
-            isExtracting={isExtracting}
             onGenerateVisualPrompt={handleGenerateVisualPrompt}
             onGenerateAllVisualPrompts={handleGenerateAllVisualPrompts}
             isGeneratingAllVisualPrompts={isGeneratingAllVisualPrompts}
             scriptType={scriptType}
-            hasExtractedDialogue={hasExtractedDialogue}
             hasGeneratedAllVisualPrompts={hasGeneratedAllVisualPrompts}
             hasSavedToLibrary={hasSavedToLibrary}
             visualPromptsCache={visualPromptsCache}
@@ -797,6 +850,9 @@ const App: React.FC = () => {
                 hasSummarizedScript={hasSummarizedScript}
                 onOpenLibrary={() => setIsLibraryOpen(true)}
                 onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
+                onExtractAndCount={handleExtractAndCount}
+                wordCountStats={wordCountStats}
+                isExtracting={isExtracting}
             />
         </div>
       </main>

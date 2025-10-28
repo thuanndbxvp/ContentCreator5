@@ -21,13 +21,10 @@ interface OutputDisplayProps {
   currentPart: number;
   totalParts: number;
   revisionCount: number;
-  onExtractDialogue: () => void;
-  isExtracting: boolean;
   onGenerateVisualPrompt: (scene: string) => void;
   onGenerateAllVisualPrompts: () => void;
   isGeneratingAllVisualPrompts: boolean;
   scriptType: ScriptType;
-  hasExtractedDialogue: boolean;
   hasGeneratedAllVisualPrompts: boolean;
   hasSavedToLibrary: boolean;
   visualPromptsCache: Map<string, VisualPrompt>;
@@ -79,10 +76,10 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({
     onSaveToLibrary, onStartSequentialGenerate,
     isGeneratingSequentially, onGenerateNextPart, currentPart, totalParts,
     revisionCount,
-    onExtractDialogue, isExtracting, onGenerateVisualPrompt,
+    onGenerateVisualPrompt,
     onGenerateAllVisualPrompts, isGeneratingAllVisualPrompts,
     scriptType,
-    hasExtractedDialogue, hasGeneratedAllVisualPrompts, hasSavedToLibrary,
+    hasGeneratedAllVisualPrompts, hasSavedToLibrary,
     visualPromptsCache
 }) => {
     const [copySuccess, setCopySuccess] = useState('');
@@ -206,11 +203,6 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({
                                 {hasGeneratedAllVisualPrompts && !isGeneratingAllVisualPrompts && <CheckIcon className="w-4 h-4 text-green-400 ml-1" />}
                             </button>
                         )}
-                        <button onClick={onExtractDialogue} className="flex items-center space-x-2 bg-primary/70 hover:bg-primary text-text-secondary px-3 py-1.5 rounded-md text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed" disabled={isExtracting || isLoading}>
-                            <MicrophoneIcon className="w-4 h-4" />
-                            <span>{isExtracting ? 'Đang tách...' : 'Tách voice'}</span>
-                            {hasExtractedDialogue && !isExtracting && <CheckIcon className="w-4 h-4 text-green-400 ml-1" />}
-                        </button>
                         <button onClick={onSaveToLibrary} className="flex items-center space-x-2 bg-primary/70 hover:bg-primary text-text-secondary px-3 py-1.5 rounded-md text-sm transition disabled:opacity-50 disabled:cursor-not-allowed" disabled={isLoading}>
                             <SaveIcon className="w-4 h-4" />
                             <span>Lưu vào thư viện</span>
