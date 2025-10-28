@@ -89,15 +89,35 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
     return savedIdeas.some(saved => saved.title === idea.title && saved.outline === idea.outline);
   };
 
+  const handleSaveAll = (ideasToSave: TopicSuggestionItem[]) => {
+      ideasToSave.forEach(idea => {
+          if (!isIdeaSaved(idea)) {
+              onSaveIdea(idea);
+          }
+      });
+  };
+
   const IdeaList: React.FC<{
     ideaList: TopicSuggestionItem[], 
     listTitle: string,
   }> = ({ ideaList, listTitle }) => (
     <div className="mt-4 space-y-2">
-        <p className="text-sm font-medium text-text-secondary">{listTitle}:</p>
-        <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
+        <div className="flex justify-between items-center">
+            <p className="text-sm font-medium text-text-secondary">{listTitle}:</p>
+            {ideaList.length > 0 && (
+                <button 
+                    onClick={() => handleSaveAll(ideaList)}
+                    className="flex items-center gap-1 text-xs bg-secondary hover:bg-primary text-text-secondary px-2 py-1 rounded-md transition"
+                    aria-label="Lưu tất cả ý tưởng hiển thị"
+                >
+                    <BookmarkIcon className="w-3 h-3"/>
+                    <span>Lưu tất cả</span>
+                </button>
+            )}
+        </div>
+        <div className="h-48 min-h-[10rem] resize-y overflow-auto border border-primary/50 rounded-md space-y-2 p-2">
             {ideaList.map((idea, index) => (
-                <div key={index} className="text-left text-sm w-full p-3 rounded-md bg-primary/70">
+                <div key={`${listTitle}-${idea.title}-${index}`} className="text-left text-sm w-full p-3 rounded-md bg-primary/70">
                   <strong className="text-text-primary block">{idea.title}</strong>
                   <span className="text-xs mt-1 block text-text-secondary">{idea.outline}</span>
                   <div className="flex items-center gap-2 mt-2">
