@@ -99,7 +99,7 @@ export const WordCountCheck: React.FC<{ script: string; targetWordCount: string 
     return (
         <div className="bg-secondary rounded-lg p-6 shadow-xl space-y-3">
             <h3 className="text-md font-semibold text-text-primary mb-2">Kiểm tra Số từ (Lời thoại)</h3>
-            <div className="max-h-48 overflow-y-auto pr-2">
+            <div>
                 <table className="w-full text-sm text-left">
                     <tbody>
                         {stats.sections.map((sec, index) => (

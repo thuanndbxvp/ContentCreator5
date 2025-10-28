@@ -40,7 +40,7 @@ const THEMES = [
 const App: React.FC = () => {
   const [title, setTitle] = useState<string>('');
   const [outlineContent, setOutlineContent] = useState<string>('');
-  const [targetAudience, setTargetAudience] = useState<string>(LANGUAGE_OPTIONS[0].value);
+  const [targetAudience, setTargetAudience] = useState<string>(LANGUAGE_OPTIONS[1].value);
   const [styleOptions, setStyleOptions] = useState<StyleOptions>({
     tone: TONE_OPTIONS[2].value,
     style: STYLE_OPTIONS[0].value,
@@ -68,6 +68,7 @@ const App: React.FC = () => {
   const [topicSuggestions, setTopicSuggestions] = useState<TopicSuggestionItem[]>([]);
   const [isSuggesting, setIsSuggesting] = useState<boolean>(false);
   const [suggestionError, setSuggestionError] = useState<string | null>(null);
+  const [hasGeneratedTopicSuggestions, setHasGeneratedTopicSuggestions] = useState<boolean>(false);
 
   const [uploadedIdeas, setUploadedIdeas] = useState<TopicSuggestionItem[]>([]);
   const [isParsing, setIsParsing] = useState<boolean>(false);
@@ -76,9 +77,11 @@ const App: React.FC = () => {
   const [keywordSuggestions, setKeywordSuggestions] = useState<string[]>([]);
   const [isSuggestingKeywords, setIsSuggestingKeywords] = useState<boolean>(false);
   const [keywordSuggestionError, setKeywordSuggestionError] = useState<string | null>(null);
+  const [hasGeneratedKeywordSuggestions, setHasGeneratedKeywordSuggestions] = useState<boolean>(false);
 
   const [isSuggestingStyle, setIsSuggestingStyle] = useState<boolean>(false);
   const [styleSuggestionError, setStyleSuggestionError] = useState<string | null>(null);
+  const [hasSuggestedStyle, setHasSuggestedStyle] = useState<boolean>(false);
 
   const [library, setLibrary] = useState<LibraryItem[]>([]);
   const [isLibraryOpen, setIsLibraryOpen] = useState<boolean>(false);
@@ -177,6 +180,14 @@ const App: React.FC = () => {
     };
   }, []);
   
+  useEffect(() => {
+    // Reset suggestion completion status when core inputs change
+    setHasGeneratedTopicSuggestions(false);
+    setHasGeneratedKeywordSuggestions(false);
+    setHasSuggestedStyle(false);
+  }, [title, outlineContent]);
+
+
   const resetCachesAndStates = () => {
     setVisualPromptsCache(new Map());
     setAllVisualPromptsCache(null);
@@ -313,10 +324,12 @@ const App: React.FC = () => {
     setIsSuggesting(true);
     setSuggestionError(null);
     setTopicSuggestions([]);
+    setHasGeneratedTopicSuggestions(false);
 
     try {
       const suggestions = await generateTopicSuggestions(title);
       setTopicSuggestions(suggestions);
+      setHasGeneratedTopicSuggestions(true);
     } catch (err) {
       setSuggestionError(err instanceof Error ? err.message : 'Lỗi không xác định khi tạo gợi ý.');
     } finally {
@@ -332,10 +345,12 @@ const App: React.FC = () => {
     setIsSuggestingKeywords(true);
     setKeywordSuggestionError(null);
     setKeywordSuggestions([]);
+    setHasGeneratedKeywordSuggestions(false);
 
     try {
       const suggestions = await generateKeywordSuggestions(title, outlineContent);
       setKeywordSuggestions(suggestions);
+      setHasGeneratedKeywordSuggestions(true);
     } catch (err) {
       setKeywordSuggestionError(err instanceof Error ? err.message : 'Lỗi không xác định khi tạo gợi ý từ khóa.');
     } finally {
@@ -350,10 +365,12 @@ const App: React.FC = () => {
     }
     setIsSuggestingStyle(true);
     setStyleSuggestionError(null);
+    setHasSuggestedStyle(false);
 
     try {
       const suggestedOptions = await suggestStyleOptions(title, outlineContent);
       setStyleOptions(suggestedOptions);
+      setHasSuggestedStyle(true);
     } catch (err) {
       setStyleSuggestionError(err instanceof Error ? err.message : 'Lỗi không xác định khi tạo gợi ý phong cách.');
     } finally {
@@ -668,6 +685,7 @@ const App: React.FC = () => {
             isSuggesting={isSuggesting}
             suggestions={topicSuggestions}
             suggestionError={suggestionError}
+            hasGeneratedTopicSuggestions={hasGeneratedTopicSuggestions}
             targetAudience={targetAudience}
             setTargetAudience={setTargetAudience}
             styleOptions={styleOptions}
@@ -686,6 +704,7 @@ const App: React.FC = () => {
             isSuggestingKeywords={isSuggestingKeywords}
             keywordSuggestions={keywordSuggestions}
             keywordSuggestionError={keywordSuggestionError}
+            hasGeneratedKeywordSuggestions={hasGeneratedKeywordSuggestions}
             scriptType={scriptType}
             setScriptType={setScriptType}
             numberOfSpeakers={numberOfSpeakers}
@@ -693,6 +712,7 @@ const App: React.FC = () => {
             onSuggestStyle={handleSuggestStyleOptions}
             isSuggestingStyle={isSuggestingStyle}
             styleSuggestionError={styleSuggestionError}
+            hasSuggestedStyle={hasSuggestedStyle}
             lengthType={lengthType}
             setLengthType={setLengthType}
             videoDuration={videoDuration}

@@ -9,6 +9,7 @@ import { TONE_EXPLANATIONS, STYLE_EXPLANATIONS, VOICE_EXPLANATIONS, FORMATTING_E
 import { BookmarkIcon } from './icons/BookmarkIcon';
 import { IdeaFileUploader } from './IdeaFileUploader';
 import { LightbulbIcon } from './icons/LightbulbIcon';
+import { CheckIcon } from './icons/CheckIcon';
 
 
 interface ControlPanelProps {
@@ -20,6 +21,7 @@ interface ControlPanelProps {
   isSuggesting: boolean;
   suggestions: TopicSuggestionItem[];
   suggestionError: string | null;
+  hasGeneratedTopicSuggestions: boolean;
   targetAudience: string;
   setTargetAudience: (audience: string) => void;
   styleOptions: StyleOptions;
@@ -38,6 +40,7 @@ interface ControlPanelProps {
   isSuggestingKeywords: boolean;
   keywordSuggestions: string[];
   keywordSuggestionError: string | null;
+  hasGeneratedKeywordSuggestions: boolean;
   scriptType: ScriptType;
   setScriptType: (type: ScriptType) => void;
   numberOfSpeakers: NumberOfSpeakers;
@@ -45,6 +48,7 @@ interface ControlPanelProps {
   onSuggestStyle: () => void;
   isSuggestingStyle: boolean;
   styleSuggestionError: string | null;
+  hasSuggestedStyle: boolean;
   lengthType: 'words' | 'duration';
   setLengthType: (type: 'words' | 'duration') => void;
   videoDuration: string;
@@ -61,7 +65,7 @@ interface ControlPanelProps {
 export const ControlPanel: React.FC<ControlPanelProps> = ({
   title, setTitle,
   outlineContent, setOutlineContent,
-  onGenerateSuggestions, isSuggesting, suggestions, suggestionError,
+  onGenerateSuggestions, isSuggesting, suggestions, suggestionError, hasGeneratedTopicSuggestions,
   targetAudience, setTargetAudience,
   styleOptions, setStyleOptions,
   keywords, setKeywords,
@@ -69,10 +73,10 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   wordCount, setWordCount,
   scriptParts, setScriptParts,
   onGenerate, isLoading,
-  onGenerateKeywordSuggestions, isSuggestingKeywords, keywordSuggestions, keywordSuggestionError,
+  onGenerateKeywordSuggestions, isSuggestingKeywords, keywordSuggestions, keywordSuggestionError, hasGeneratedKeywordSuggestions,
   scriptType, setScriptType,
   numberOfSpeakers, setNumberOfSpeakers,
-  onSuggestStyle, isSuggestingStyle, styleSuggestionError,
+  onSuggestStyle, isSuggestingStyle, styleSuggestionError, hasSuggestedStyle,
   lengthType, setLengthType, videoDuration, setVideoDuration,
   savedIdeas, onSaveIdea, onOpenSavedIdeasModal,
   onParseFile, isParsingFile, parsingFileError, uploadedIdeas
@@ -186,7 +190,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
               ) : (
                 <>
                   <SparklesIcon className="w-5 h-5 mr-2" />
-                  Gợi ý AI
+                  <span>Gợi ý AI</span>
+                  {!isSuggesting && hasGeneratedTopicSuggestions && <CheckIcon className="w-5 h-5 ml-2 text-green-400" />}
                 </>
               )}
             </button>
@@ -230,7 +235,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
           ) : (
             <>
               <SparklesIcon className="w-4 h-4 mr-2" />
-              Gợi ý từ khóa
+              <span>Gợi ý từ khóa</span>
+              {!isSuggestingKeywords && hasGeneratedKeywordSuggestions && <CheckIcon className="w-4 h-4 ml-2 text-green-400" />}
             </>
           )}
         </button>
@@ -309,7 +315,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             ) : (
                 <>
                     <SparklesIcon className="w-5 h-5 mr-2" />
-                    AI Gợi ý (Mục 5, 6, 7)
+                    <span>AI Gợi ý (Mục 5, 6, 7)</span>
+                    {!isSuggestingStyle && hasSuggestedStyle && <CheckIcon className="w-5 h-5 ml-2 text-green-400" />}
                 </>
             )}
         </button>
