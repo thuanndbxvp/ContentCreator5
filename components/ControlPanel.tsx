@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { OptionSelector } from './OptionSelector';
 import { SparklesIcon } from './icons/SparklesIcon';
-import type { StyleOptions, FormattingOptions, Tone, Style, Voice, ScriptType, NumberOfSpeakers, TopicSuggestionItem, SavedIdea } from '../types';
-import { TONE_OPTIONS, STYLE_OPTIONS, VOICE_OPTIONS, LANGUAGE_OPTIONS, SCRIPT_TYPE_OPTIONS, NUMBER_OF_SPEAKERS_OPTIONS } from '../constants';
+import type { StyleOptions, FormattingOptions, Tone, Style, Voice, ScriptType, NumberOfSpeakers, TopicSuggestionItem, SavedIdea, AiProvider } from '../types';
+import { TONE_OPTIONS, STYLE_OPTIONS, VOICE_OPTIONS, LANGUAGE_OPTIONS, SCRIPT_TYPE_OPTIONS, NUMBER_OF_SPEAKERS_OPTIONS, AI_PROVIDER_OPTIONS, GEMINI_MODELS, OPENAI_MODELS } from '../constants';
 import { IdeaBrainstorm } from './IdeaBrainstorm';
 import { Tooltip } from './Tooltip';
 import { TONE_EXPLANATIONS, STYLE_EXPLANATIONS, VOICE_EXPLANATIONS, FORMATTING_EXPLANATIONS } from '../constants/explanations';
@@ -60,6 +60,10 @@ interface ControlPanelProps {
   isParsingFile: boolean;
   parsingFileError: string | null;
   uploadedIdeas: TopicSuggestionItem[];
+  aiProvider: AiProvider;
+  setAiProvider: (provider: AiProvider) => void;
+  selectedModel: string;
+  setSelectedModel: (model: string) => void;
 }
 
 export const ControlPanel: React.FC<ControlPanelProps> = ({
@@ -79,7 +83,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   onSuggestStyle, isSuggestingStyle, styleSuggestionError, hasSuggestedStyle,
   lengthType, setLengthType, videoDuration, setVideoDuration,
   savedIdeas, onSaveIdea, onOpenSavedIdeasModal,
-  onParseFile, isParsingFile, parsingFileError, uploadedIdeas
+  onParseFile, isParsingFile, parsingFileError, uploadedIdeas,
+  aiProvider, setAiProvider, selectedModel, setSelectedModel
 }) => {
   const handleCheckboxChange = (key: keyof FormattingOptions, value: boolean) => {
     setFormattingOptions({ ...formattingOptions, [key]: value });
@@ -100,6 +105,18 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
           }
       });
   };
+
+  const handleProviderChange = (provider: AiProvider) => {
+    setAiProvider(provider);
+    // Set default model for the new provider
+    if (provider === 'gemini') {
+        setSelectedModel(GEMINI_MODELS[0].value);
+    } else {
+        setSelectedModel(OPENAI_MODELS[0].value);
+    }
+  };
+
+  const modelOptions = aiProvider === 'gemini' ? GEMINI_MODELS : OPENAI_MODELS;
 
   const IdeaList: React.FC<{
     ideaList: TopicSuggestionItem[], 
@@ -179,7 +196,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         <div className="grid grid-cols-2 gap-2 mt-4">
             <button 
               onClick={onGenerateSuggestions} 
-              disabled={isSuggesting || !title}
+              disabled={isSuggesting || !title || isLoading}
               className="w-full flex items-center justify-center bg-secondary hover:bg-primary disabled:bg-primary/50 disabled:cursor-not-allowed text-text-primary font-bold py-2 px-4 rounded-lg transition"
             >
               {isSuggesting ? (
@@ -210,7 +227,34 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
       </div>
       
       <div>
-        <label htmlFor="keywords" className="block text-sm font-medium text-text-secondary mb-2">2. Từ khóa (Tùy chọn)</label>
+        <label className="block text-sm font-medium text-text-secondary mb-2">2. Nhà cung cấp AI & Model</label>
+        <div className="flex bg-primary/70 rounded-lg p-1 mb-3">
+            {AI_PROVIDER_OPTIONS.map(option => (
+                <button
+                    key={option.value}
+                    onClick={() => handleProviderChange(option.value)}
+                    className={`w-full py-2 text-sm font-semibold rounded-md transition-colors ${
+                        aiProvider === option.value ? 'bg-accent text-white' : 'text-text-secondary hover:bg-primary'
+                    }`}
+                >
+                    {option.label}
+                </button>
+            ))}
+        </div>
+         <select
+          id="model"
+          value={selectedModel}
+          onChange={(e) => setSelectedModel(e.target.value)}
+          className="w-full bg-primary/70 border border-secondary rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition"
+        >
+          {modelOptions.map(model => (
+            <option key={model.value} value={model.value}>{model.label}</option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label htmlFor="keywords" className="block text-sm font-medium text-text-secondary mb-2">3. Từ khóa (Tùy chọn)</label>
         <input
           id="keywords"
           type="text"
@@ -221,7 +265,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         />
         <button 
           onClick={onGenerateKeywordSuggestions} 
-          disabled={isSuggestingKeywords || !title}
+          disabled={isSuggestingKeywords || !title || isLoading}
           className="w-full mt-2 flex items-center justify-center bg-secondary/70 hover:bg-primary disabled:bg-primary/50 disabled:cursor-not-allowed text-text-secondary py-2 px-4 rounded-lg transition text-sm"
         >
           {isSuggestingKeywords ? (
@@ -259,7 +303,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-2">3. Định dạng Kịch bản</label>
+        <label className="block text-sm font-medium text-text-secondary mb-2">4. Định dạng Kịch bản</label>
         <div className="flex bg-primary/70 rounded-lg p-1">
             {SCRIPT_TYPE_OPTIONS.map(option => (
                 <button
@@ -277,7 +321,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
 
       {scriptType === 'Podcast' && (
         <OptionSelector<NumberOfSpeakers>
-            title="4. Số lượng người nói"
+            title="5. Số lượng người nói"
             options={NUMBER_OF_SPEAKERS_OPTIONS}
             selectedOption={numberOfSpeakers}
             onSelect={setNumberOfSpeakers}
@@ -285,7 +329,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
       )}
 
       <div>
-        <label htmlFor="language" className="block text-sm font-medium text-text-secondary mb-2">{scriptType === 'Podcast' ? '5' : '4'}. Ngôn ngữ</label>
+        <label htmlFor="language" className="block text-sm font-medium text-text-secondary mb-2">{scriptType === 'Podcast' ? '6' : '5'}. Ngôn ngữ</label>
         <select
           id="language"
           value={targetAudience}
@@ -301,7 +345,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
       <div className="pt-4 mt-4 border-t border-primary/50">
         <button 
             onClick={onSuggestStyle}
-            disabled={isSuggestingStyle || !title}
+            disabled={isSuggestingStyle || !title || isLoading}
             className="w-full mb-4 flex items-center justify-center bg-secondary hover:bg-primary disabled:bg-primary/50 disabled:cursor-not-allowed text-text-primary font-semibold py-2 px-4 rounded-lg transition"
         >
             {isSuggestingStyle ? (
@@ -315,7 +359,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             ) : (
                 <>
                     <SparklesIcon className="w-5 h-5 mr-2" />
-                    <span>AI Gợi ý (Mục 5, 6, 7)</span>
+                    <span>AI Gợi ý (Mục 6, 7, 8)</span>
                     {!isSuggestingStyle && hasSuggestedStyle && <CheckIcon className="w-5 h-5 ml-2 text-green-400" />}
                 </>
             )}
@@ -324,7 +368,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
       </div>
 
       <OptionSelector<Tone>
-        title={`${scriptType === 'Podcast' ? '6' : '5'}. Tông giọng (Tone)`}
+        title={`${scriptType === 'Podcast' ? '7' : '6'}. Tông giọng (Tone)`}
         options={TONE_OPTIONS}
         selectedOption={styleOptions.tone}
         onSelect={(option) => setStyleOptions({ ...styleOptions, tone: option })}
@@ -332,7 +376,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
       />
 
       <OptionSelector<Style>
-        title={`${scriptType === 'Podcast' ? '7' : '6'}. Phong cách (Style)`}
+        title={`${scriptType === 'Podcast' ? '8' : '7'}. Phong cách (Style)`}
         options={STYLE_OPTIONS}
         selectedOption={styleOptions.style}
         onSelect={(option) => setStyleOptions({ ...styleOptions, style: option })}
@@ -340,7 +384,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
       />
       
       <OptionSelector<Voice>
-        title={`${scriptType === 'Podcast' ? '8' : '7'}. Lối diễn đạt (Voice)`}
+        title={`${scriptType === 'Podcast' ? '9' : '8'}. Lối diễn đạt (Voice)`}
         options={VOICE_OPTIONS}
         selectedOption={styleOptions.voice}
         onSelect={(option) => setStyleOptions({ ...styleOptions, voice: option })}
@@ -348,7 +392,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
       />
 
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-2">{scriptType === 'Podcast' ? '9' : '8'}. Cấu trúc & Định dạng</label>
+        <label className="block text-sm font-medium text-text-secondary mb-2">{scriptType === 'Podcast' ? '10' : '9'}. Cấu trúc & Định dạng</label>
         
         <div className="flex bg-primary/70 rounded-lg p-1 mb-4">
             <button

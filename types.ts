@@ -4,6 +4,7 @@ export type Style = 'Narrative' | 'Descriptive' | 'Expository' | 'Persuasive' | 
 export type Voice = 'Authoritative' | 'Conversational' | 'Personal' | 'Humorous' | 'Professional' | 'Empathetic' | 'Persuasive';
 export type ScriptType = 'Video' | 'Podcast';
 export type NumberOfSpeakers = 'Auto' | '2' | '3' | '4' | '5';
+export type AiProvider = 'gemini' | 'openai';
 
 // Options interfaces
 export interface StyleOptions {

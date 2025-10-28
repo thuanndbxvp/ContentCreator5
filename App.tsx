@@ -9,9 +9,9 @@ import { AllVisualPromptsModal } from './components/AllVisualPromptsModal';
 import { SummarizeModal } from './components/SummarizeModal';
 import { SavedIdeasModal } from './components/SavedIdeasModal';
 import { SideToolsPanel } from './components/SideToolsPanel';
-import { generateScript, generateScriptOutline, generateTopicSuggestions, reviseScript, generateScriptPart, extractDialogue, generateKeywordSuggestions, validateApiKey, generateVisualPrompt, generateAllVisualPrompts, summarizeScriptForScenes, suggestStyleOptions, parseIdeasFromFile } from './services/geminiService';
-import type { StyleOptions, FormattingOptions, LibraryItem, GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, ScriptType, NumberOfSpeakers, CachedData, TopicSuggestionItem, SavedIdea } from './types';
-import { TONE_OPTIONS, STYLE_OPTIONS, VOICE_OPTIONS, LANGUAGE_OPTIONS } from './constants';
+import { generateScript, generateScriptOutline, generateTopicSuggestions, reviseScript, generateScriptPart, extractDialogue, generateKeywordSuggestions, validateApiKey, generateVisualPrompt, generateAllVisualPrompts, summarizeScriptForScenes, suggestStyleOptions, parseIdeasFromFile } from './services/aiService';
+import type { StyleOptions, FormattingOptions, LibraryItem, GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, ScriptType, NumberOfSpeakers, CachedData, TopicSuggestionItem, SavedIdea, AiProvider } from './types';
+import { TONE_OPTIONS, STYLE_OPTIONS, VOICE_OPTIONS, LANGUAGE_OPTIONS, GEMINI_MODELS } from './constants';
 
 const YoutubeLogoIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="32" height="24" viewBox="0 0 28 20" fill="none" {...props}>
@@ -51,8 +51,8 @@ const App: React.FC = () => {
     headings: true,
     bullets: true,
     bold: true,
-    includeIntro: true,
-    includeOutro: true,
+    includeIntro: false,
+    includeOutro: false,
   });
   const [wordCount, setWordCount] = useState<string>('800');
   const [scriptParts, setScriptParts] = useState<string>('Auto');
@@ -102,7 +102,7 @@ const App: React.FC = () => {
   const [extractionError, setExtractionError] = useState<string | null>(null);
   
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState<boolean>(false);
-  const [apiKeys, setApiKeys] = useState<string[]>([]);
+  const [apiKeys, setApiKeys] = useState<Record<AiProvider, string[]>>({ gemini: [], openai: [] });
 
   const [isVisualPromptModalOpen, setIsVisualPromptModalOpen] = useState<boolean>(false);
   const [visualPrompt, setVisualPrompt] = useState<VisualPrompt | null>(null);
@@ -118,6 +118,11 @@ const App: React.FC = () => {
   const [summarizedScript, setSummarizedScript] = useState<ScriptPartSummary[] | null>(null);
   const [isSummarizing, setIsSummarizing] = useState<boolean>(false);
   const [summarizationError, setSummarizationError] = useState<string | null>(null);
+
+  // AI Provider State
+  const [aiProvider, setAiProvider] = useState<AiProvider>('gemini');
+  const [selectedModel, setSelectedModel] = useState<string>(GEMINI_MODELS[1].value);
+
 
   // Caching states
   const [visualPromptsCache, setVisualPromptsCache] = useState<Map<string, VisualPrompt>>(new Map());
@@ -145,10 +150,27 @@ const App: React.FC = () => {
       const savedIdeasData = localStorage.getItem('yt-script-saved-ideas');
       if (savedIdeasData) setSavedIdeas(JSON.parse(savedIdeasData));
       
-      const savedApiKeys = localStorage.getItem('gemini-api-keys');
+      const savedApiKeys = localStorage.getItem('ai-api-keys');
       if (savedApiKeys) {
         const parsedKeys = JSON.parse(savedApiKeys);
-        if (Array.isArray(parsedKeys)) setApiKeys(parsedKeys);
+        if (parsedKeys.gemini || parsedKeys.openai) {
+            setApiKeys({
+                gemini: parsedKeys.gemini || [],
+                openai: parsedKeys.openai || [],
+            });
+        }
+      } else {
+          // Migration from old key format
+          const oldGeminiKeys = localStorage.getItem('gemini-api-keys');
+          if(oldGeminiKeys) {
+              const parsedOldKeys = JSON.parse(oldGeminiKeys);
+              if (Array.isArray(parsedOldKeys)) {
+                  const newKeys = { gemini: parsedOldKeys, openai: [] };
+                  setApiKeys(newKeys);
+                  localStorage.setItem('ai-api-keys', JSON.stringify(newKeys));
+                  localStorage.removeItem('gemini-api-keys');
+              }
+          }
       }
       
       const savedTheme = localStorage.getItem('yt-script-theme');
@@ -167,6 +189,11 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('yt-script-saved-ideas', JSON.stringify(savedIdeas));
   }, [savedIdeas]);
+
+  useEffect(() => {
+    localStorage.setItem('ai-api-keys', JSON.stringify(apiKeys));
+  }, [apiKeys]);
+
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -200,25 +227,26 @@ const App: React.FC = () => {
   };
 
 
-  const handleAddApiKey = async (key: string): Promise<{ success: boolean, error?: string }> => {
-    if (apiKeys.includes(key)) return { success: false, error: 'API Key này đã tồn tại trong danh sách.' };
+  const handleAddApiKey = async (key: string, provider: AiProvider): Promise<{ success: boolean, error?: string }> => {
+    if (apiKeys[provider].includes(key)) return { success: false, error: 'API Key này đã tồn tại trong danh sách.' };
 
     try {
-        await validateApiKey(key);
-        // Add new key to the front to make it the active one
-        const updatedKeys = [key, ...apiKeys];
-        setApiKeys(updatedKeys);
-        localStorage.setItem('gemini-api-keys', JSON.stringify(updatedKeys));
+        await validateApiKey(key, provider);
+        setApiKeys(prev => {
+            const updatedKeysForProvider = [key, ...prev[provider]];
+            return { ...prev, [provider]: updatedKeysForProvider };
+        });
         return { success: true };
     } catch (err) {
         return { success: false, error: err instanceof Error ? err.message : 'Lỗi không xác định khi xác thực key.' };
     }
   };
 
-  const handleDeleteApiKey = (keyToDelete: string) => {
-    const updatedKeys = apiKeys.filter(k => k !== keyToDelete);
-    setApiKeys(updatedKeys);
-    localStorage.setItem('gemini-api-keys', JSON.stringify(updatedKeys));
+  const handleDeleteApiKey = (keyToDelete: string, provider: AiProvider) => {
+    setApiKeys(prev => {
+        const updatedKeysForProvider = prev[provider].filter(k => k !== keyToDelete);
+        return { ...prev, [provider]: updatedKeysForProvider };
+    });
   };
 
   const handleSaveToLibrary = useCallback(() => {
@@ -307,14 +335,14 @@ const App: React.FC = () => {
         setParsingError(null);
         setUploadedIdeas([]);
         try {
-            const ideas = await parseIdeasFromFile(fileContent);
+            const ideas = await parseIdeasFromFile(fileContent, aiProvider, selectedModel);
             setUploadedIdeas(ideas);
         } catch (err) {
             setParsingError(err instanceof Error ? err.message : 'Lỗi không xác định khi phân tích file.');
         } finally {
             setIsParsing(false);
         }
-    }, []);
+    }, [aiProvider, selectedModel]);
 
   const handleGenerateSuggestions = useCallback(async () => {
     if (!title.trim()) {
@@ -327,7 +355,7 @@ const App: React.FC = () => {
     setHasGeneratedTopicSuggestions(false);
 
     try {
-      const suggestions = await generateTopicSuggestions(title);
+      const suggestions = await generateTopicSuggestions(title, aiProvider, selectedModel);
       setTopicSuggestions(suggestions);
       setHasGeneratedTopicSuggestions(true);
     } catch (err) {
@@ -335,7 +363,7 @@ const App: React.FC = () => {
     } finally {
       setIsSuggesting(false);
     }
-  }, [title]);
+  }, [title, aiProvider, selectedModel]);
 
   const handleGenerateKeywordSuggestions = useCallback(async () => {
     if (!title.trim()) {
@@ -348,7 +376,7 @@ const App: React.FC = () => {
     setHasGeneratedKeywordSuggestions(false);
 
     try {
-      const suggestions = await generateKeywordSuggestions(title, outlineContent);
+      const suggestions = await generateKeywordSuggestions(title, outlineContent, aiProvider, selectedModel);
       setKeywordSuggestions(suggestions);
       setHasGeneratedKeywordSuggestions(true);
     } catch (err) {
@@ -356,7 +384,7 @@ const App: React.FC = () => {
     } finally {
       setIsSuggestingKeywords(false);
     }
-  }, [title, outlineContent]);
+  }, [title, outlineContent, aiProvider, selectedModel]);
 
   const handleSuggestStyleOptions = useCallback(async () => {
     if (!title.trim()) {
@@ -368,7 +396,7 @@ const App: React.FC = () => {
     setHasSuggestedStyle(false);
 
     try {
-      const suggestedOptions = await suggestStyleOptions(title, outlineContent);
+      const suggestedOptions = await suggestStyleOptions(title, outlineContent, aiProvider, selectedModel);
       setStyleOptions(suggestedOptions);
       setHasSuggestedStyle(true);
     } catch (err) {
@@ -376,7 +404,7 @@ const App: React.FC = () => {
     } finally {
       setIsSuggestingStyle(false);
     }
-  }, [title, outlineContent]);
+  }, [title, outlineContent, aiProvider, selectedModel]);
 
   const handleGenerateScript = useCallback(async () => {
     if (!title.trim()) {
@@ -399,10 +427,10 @@ const App: React.FC = () => {
     try {
       const isLongScript = parseInt(finalWordCount, 10) > 1000 && scriptType === 'Video';
       if (isLongScript) {
-        const outline = await generateScriptOutline(params);
+        const outline = await generateScriptOutline(params, aiProvider, selectedModel);
         setGeneratedScript(outline);
       } else {
-        const script = await generateScript(params);
+        const script = await generateScript(params, aiProvider, selectedModel);
         setGeneratedScript(script);
       }
     } catch (err) {
@@ -410,7 +438,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [title, outlineContent, targetAudience, styleOptions, keywords, formattingOptions, wordCount, scriptParts, scriptType, numberOfSpeakers, lengthType, videoDuration]);
+  }, [title, outlineContent, targetAudience, styleOptions, keywords, formattingOptions, wordCount, scriptParts, scriptType, numberOfSpeakers, lengthType, videoDuration, aiProvider, selectedModel]);
   
   const handleReviseScript = useCallback(async () => {
     if (!revisionPrompt.trim() || !generatedScript.trim()) {
@@ -428,7 +456,7 @@ const App: React.FC = () => {
     const params: GenerationParams = { title, outlineContent, targetAudience, styleOptions, keywords, formattingOptions, wordCount: finalWordCount, scriptParts, scriptType, numberOfSpeakers };
 
     try {
-      const revisedScript = await reviseScript(generatedScript, revisionPrompt, params);
+      const revisedScript = await reviseScript(generatedScript, revisionPrompt, params, aiProvider, selectedModel);
       setGeneratedScript(revisedScript);
       setRevisionCount(prev => prev + 1);
       setRevisionPrompt('');
@@ -437,7 +465,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [revisionPrompt, generatedScript, title, outlineContent, targetAudience, styleOptions, keywords, formattingOptions, wordCount, scriptParts, scriptType, numberOfSpeakers, lengthType, videoDuration]);
+  }, [revisionPrompt, generatedScript, title, outlineContent, targetAudience, styleOptions, keywords, formattingOptions, wordCount, scriptParts, scriptType, numberOfSpeakers, lengthType, videoDuration, aiProvider, selectedModel]);
 
   const handleGenerateNextPart = useCallback(async () => {
       if (!isGeneratingSequentially || currentPartIndex >= outlineParts.length) {
@@ -454,7 +482,7 @@ const App: React.FC = () => {
           const fullOutline = outlineParts.join('\n');
           const currentPartOutline = outlineParts[currentPartIndex];
           const params = { title, outlineContent, targetAudience, styleOptions, keywords, formattingOptions, wordCount: finalWordCount, scriptParts, scriptType, numberOfSpeakers };
-          const newPart = await generateScriptPart(fullOutline, generatedScript, currentPartOutline, params);
+          const newPart = await generateScriptPart(fullOutline, generatedScript, currentPartOutline, params, aiProvider, selectedModel);
           
           setGeneratedScript(prev => (prev ? prev + '\n\n' : '') + newPart);
           
@@ -470,7 +498,7 @@ const App: React.FC = () => {
       } finally {
           setIsLoading(false);
       }
-  }, [currentPartIndex, outlineParts, isGeneratingSequentially, generatedScript, title, outlineContent, targetAudience, styleOptions, keywords, formattingOptions, wordCount, scriptParts, scriptType, numberOfSpeakers, lengthType, videoDuration]);
+  }, [currentPartIndex, outlineParts, isGeneratingSequentially, generatedScript, title, outlineContent, targetAudience, styleOptions, keywords, formattingOptions, wordCount, scriptParts, scriptType, numberOfSpeakers, lengthType, videoDuration, aiProvider, selectedModel]);
   
   const handleStartSequentialGeneration = useCallback(() => {
     if (!generatedScript.trim() || !generatedScript.includes("### Dàn Ý Chi Tiết")) {
@@ -505,7 +533,7 @@ const App: React.FC = () => {
     setIsDialogueModalOpen(true);
 
     try {
-        const dialogue = await extractDialogue(generatedScript, targetAudience);
+        const dialogue = await extractDialogue(generatedScript, targetAudience, aiProvider, selectedModel);
         setExtractedDialogue(dialogue);
         setExtractedDialogueCache(dialogue);
         setHasExtractedDialogue(true);
@@ -514,7 +542,7 @@ const App: React.FC = () => {
     } finally {
         setIsExtracting(false);
     }
-  }, [generatedScript, targetAudience, extractedDialogueCache]);
+  }, [generatedScript, targetAudience, extractedDialogueCache, aiProvider, selectedModel]);
 
   const handleGenerateVisualPrompt = useCallback(async (scene: string) => {
     if (visualPromptsCache.has(scene)) {
@@ -529,7 +557,7 @@ const App: React.FC = () => {
     setIsVisualPromptModalOpen(true);
 
     try {
-        const prompt = await generateVisualPrompt(scene);
+        const prompt = await generateVisualPrompt(scene, aiProvider, selectedModel);
         setVisualPrompt(prompt);
         setVisualPromptsCache(prevCache => new Map(prevCache).set(scene, prompt));
     } catch(err) {
@@ -537,7 +565,7 @@ const App: React.FC = () => {
     } finally {
         setIsGeneratingVisualPrompt(false);
     }
-  }, [visualPromptsCache]);
+  }, [visualPromptsCache, aiProvider, selectedModel]);
   
   const handleGenerateAllVisualPrompts = useCallback(async () => {
     if (!generatedScript.trim()) return;
@@ -561,7 +589,7 @@ const App: React.FC = () => {
     setIsAllVisualPromptsModalOpen(true);
 
     try {
-        const promptsFromServer = await generateAllVisualPrompts(generatedScript);
+        const promptsFromServer = await generateAllVisualPrompts(generatedScript, aiProvider, selectedModel);
         
         const finalPrompts = promptsFromServer.map(serverPrompt => {
             const cachedSinglePrompt = visualPromptsCache.get(serverPrompt.scene);
@@ -583,7 +611,7 @@ const App: React.FC = () => {
     } finally {
         setIsGeneratingAllVisualPrompts(false);
     }
-  }, [generatedScript, allVisualPromptsCache, visualPromptsCache]);
+  }, [generatedScript, allVisualPromptsCache, visualPromptsCache, aiProvider, selectedModel]);
 
   const handleSummarizeScript = useCallback(async () => {
     if (!generatedScript.trim()) return;
@@ -600,7 +628,7 @@ const App: React.FC = () => {
     setIsSummarizeModalOpen(true);
 
     try {
-        const summary = await summarizeScriptForScenes(generatedScript);
+        const summary = await summarizeScriptForScenes(generatedScript, aiProvider, selectedModel);
         setSummarizedScript(summary);
         setSummarizedScriptCache(summary);
         setHasSummarizedScript(true);
@@ -609,7 +637,7 @@ const App: React.FC = () => {
     } finally {
         setIsSummarizing(false);
     }
-  }, [generatedScript, summarizedScriptCache]);
+  }, [generatedScript, summarizedScriptCache, aiProvider, selectedModel]);
 
 
   useEffect(() => {
@@ -621,6 +649,8 @@ const App: React.FC = () => {
   const finalWordCount = lengthType === 'duration' && videoDuration
       ? (parseInt(videoDuration, 10) * 150).toString()
       : wordCount;
+      
+  const hasApiKey = apiKeys[aiProvider] && apiKeys[aiProvider].length > 0;
 
   return (
     <div className="min-h-screen bg-primary font-sans">
@@ -699,7 +729,7 @@ const App: React.FC = () => {
             scriptParts={scriptParts}
             setScriptParts={setScriptParts}
             onGenerate={handleGenerateScript}
-            isLoading={isLoading || isSuggesting || isSuggestingKeywords || apiKeys.length === 0}
+            isLoading={isLoading || isSuggesting || isSuggestingKeywords || !hasApiKey}
             onGenerateKeywordSuggestions={handleGenerateKeywordSuggestions}
             isSuggestingKeywords={isSuggestingKeywords}
             keywordSuggestions={keywordSuggestions}
@@ -724,6 +754,10 @@ const App: React.FC = () => {
             isParsingFile={isParsing}
             parsingFileError={parsingError}
             uploadedIdeas={uploadedIdeas}
+            aiProvider={aiProvider}
+            setAiProvider={setAiProvider}
+            selectedModel={selectedModel}
+            setSelectedModel={setSelectedModel}
           />
         </div>
         <div className="w-full lg:w-[50%]">

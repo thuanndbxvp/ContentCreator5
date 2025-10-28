@@ -1,9 +1,26 @@
-import type { Tone, Style, Voice, ScriptType, NumberOfSpeakers } from './types';
+import type { Tone, Style, Voice, ScriptType, NumberOfSpeakers, AiProvider } from './types';
 
 interface LabeledOption<T> {
   value: T;
   label: string;
 }
+
+export const AI_PROVIDER_OPTIONS: LabeledOption<AiProvider>[] = [
+    { value: 'gemini', label: 'Google Gemini' },
+    { value: 'openai', label: 'OpenAI' },
+];
+
+export const GEMINI_MODELS: LabeledOption<string>[] = [
+    { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+    { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
+];
+
+export const OPENAI_MODELS: LabeledOption<string>[] = [
+    { value: 'gpt-4o', label: 'GPT-4o' },
+    { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
+    { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
+];
+
 
 export const SCRIPT_TYPE_OPTIONS: LabeledOption<ScriptType>[] = [
     { value: 'Video', label: 'Video YouTube' },
