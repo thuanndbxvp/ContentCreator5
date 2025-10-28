@@ -30,16 +30,11 @@ interface OutputDisplayProps {
   visualPromptsCache: Map<string, VisualPrompt>;
 }
 
-const LoadingSkeleton: React.FC = () => (
-  <div className="space-y-4 animate-pulse">
-    <div className="h-4 bg-secondary rounded w-3/4"></div>
-    <div className="h-4 bg-secondary rounded"></div>
-    <div className="h-4 bg-secondary rounded"></div>
-    <div className="h-4 bg-secondary rounded w-5/6"></div>
-    <div className="h-8 bg-secondary rounded w-1/4 mt-6"></div>
-    <div className="h-4 bg-secondary rounded"></div>
-    <div className="h-4 bg-secondary rounded w-1/2"></div>
-  </div>
+const GeneratingIndicator: React.FC<{text: string}> = ({ text }) => (
+    <div className="w-full bg-accent/90 rounded-lg p-3 flex items-center justify-center space-x-3 shadow-lg">
+        <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
+        <span className="text-white font-semibold">{text}</span>
+    </div>
 );
 
 const InitialState: React.FC = () => (
@@ -130,7 +125,15 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({
     };
 
     const renderContent = () => {
-        if (isLoading && !script) return <LoadingSkeleton />;
+        if (isLoading && !script) {
+            return (
+                <div className="flex items-center justify-center h-full">
+                    <div className="w-full max-w-md">
+                        <GeneratingIndicator text="Đang tạo..." />
+                    </div>
+                </div>
+            );
+        }
         if (error) {
             return <div className="text-center text-red-400 bg-red-900/50 p-4 rounded-md">
                 <h3 className="font-bold">Đã xảy ra lỗi</h3>
@@ -223,7 +226,11 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({
         <div className="p-6 overflow-y-auto flex-grow min-h-[400px]">
             <div className="w-full h-full">
                 {renderContent()}
-                {isLoading && script && <div className="mt-4"><LoadingSkeleton /></div>}
+                {isLoading && script && (
+                    <div className="mt-4">
+                        <GeneratingIndicator text="Đang sửa đổi..." />
+                    </div>
+                )}
             </div>
         </div>
         {isGeneratingSequentially && currentPart < totalParts && !isLoading && (

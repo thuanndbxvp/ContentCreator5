@@ -1,6 +1,4 @@
 import React from 'react';
-import { PencilIcon } from './icons/PencilIcon';
-import { FilmIcon } from './icons/FilmIcon';
 import { CheckIcon } from './icons/CheckIcon';
 
 interface ScriptToolsProps {
@@ -37,15 +35,14 @@ export const ScriptTools: React.FC<ScriptToolsProps> = ({
             <button
                 onClick={onRevise}
                 disabled={!revisionPrompt.trim() || isLoading}
-                className="flex-1 flex items-center justify-center border border-text-secondary/50 bg-transparent hover:bg-primary/70 disabled:opacity-50 disabled:cursor-not-allowed text-text-primary font-bold py-2 px-4 rounded-lg transition"
+                className="flex-1 flex items-center justify-center border border-accent bg-transparent hover:bg-accent/20 disabled:opacity-50 disabled:cursor-not-allowed text-accent font-semibold py-2 px-3 rounded-lg transition text-sm"
             >
-                <PencilIcon className="w-5 h-5 mr-2" />
                 Sửa Kịch bản
             </button>
              <button
                 onClick={onSummarizeScript}
                 disabled={isLoading || isSummarizing}
-                className="flex-1 flex items-center justify-center bg-primary hover:bg-primary/70 disabled:bg-primary/50 disabled:cursor-not-allowed text-text-secondary font-bold py-2 px-4 rounded-lg transition"
+                className="flex-1 flex items-center justify-center bg-accent hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2 px-3 rounded-lg transition text-sm"
             >
                 {isSummarizing ? (
                     <>
@@ -56,12 +53,9 @@ export const ScriptTools: React.FC<ScriptToolsProps> = ({
                         <span>Đang làm...</span>
                     </>
                 ) : (
-                    <>
-                        <FilmIcon className="w-5 h-5 mr-2" />
-                        <span>Chuyển thể kịch bản</span>
-                    </>
+                    <span>Chuyển thể kịch bản</span>
                 )}
-                {hasSummarizedScript && !isSummarizing && <CheckIcon className="w-5 h-5 text-green-400 ml-2" />}
+                {hasSummarizedScript && !isSummarizing && <CheckIcon className="w-5 h-5 text-white/80 ml-2" />}
             </button>
         </div>
     </div>
