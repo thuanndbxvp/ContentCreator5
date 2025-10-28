@@ -1,16 +1,14 @@
 // Literal types from constants
-export type Tone = 'Formal' | 'Informative' | 'Conversational' | 'Persuasive' | 'Humorous' | 'Empathetic' | 'Inspirational';
+export type Expression = 'Formal' | 'Informative' | 'Conversational' | 'Persuasive' | 'Humorous' | 'Empathetic' | 'Inspirational' | 'Authoritative' | 'Personal' | 'Professional';
 export type Style = 'Narrative' | 'Descriptive' | 'Expository' | 'Persuasive' | 'Technical' | 'Academic' | 'Business';
-export type Voice = 'Authoritative' | 'Conversational' | 'Personal' | 'Humorous' | 'Professional' | 'Empathetic' | 'Persuasive';
 export type ScriptType = 'Video' | 'Podcast';
 export type NumberOfSpeakers = 'Auto' | '2' | '3' | '4' | '5';
 export type AiProvider = 'gemini' | 'openai' | 'elevenlabs';
 
 // Options interfaces
 export interface StyleOptions {
-  tone: Tone;
+  expression: Expression;
   style: Style;
-  voice: Voice;
 }
 
 export interface FormattingOptions {

@@ -44,7 +44,7 @@ export const IdeaFileUploader: React.FC<IdeaFileUploaderProps> = ({ onParse, isL
             <button
                 onClick={handleButtonClick}
                 disabled={isLoading}
-                className="w-full flex items-center justify-center bg-primary/70 hover:bg-primary disabled:bg-primary/50 disabled:cursor-not-allowed text-text-secondary font-semibold py-2 px-4 rounded-lg transition"
+                className="w-full flex items-center justify-center bg-secondary/50 hover:bg-secondary/80 disabled:bg-secondary/40 disabled:cursor-not-allowed text-text-secondary font-semibold py-2 px-4 rounded-lg transition border border-border/50"
             >
                 {isLoading ? (
                     <>

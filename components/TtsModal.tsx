@@ -48,7 +48,7 @@ const VoiceItem: React.FC<{voice: ElevenlabsVoice, isSelected: boolean, onSelect
     return (
         <li 
             onClick={onSelect}
-            className={`p-3 rounded-lg flex justify-between items-center cursor-pointer transition-colors ${isSelected ? 'bg-accent text-white' : 'bg-primary/70 hover:bg-primary'}`}
+            className={`p-3 rounded-lg flex justify-between items-center cursor-pointer transition-colors border ${isSelected ? 'bg-accent text-white border-accent' : 'bg-secondary/70 hover:bg-secondary border-border'}`}
         >
             <div className="flex-grow">
                 <p className="font-semibold">{voice.name}</p>
@@ -82,9 +82,9 @@ export const TtsModal: React.FC<TtsModalProps> = ({ isOpen, onClose, dialogue, v
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4" onClick={onClose}>
-        <div className="bg-secondary rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="bg-secondary rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border border-border" onClick={e => e.stopPropagation()}>
             {/* Header */}
-            <div className="flex justify-between items-center p-4 border-b border-primary">
+            <div className="flex justify-between items-center p-4 border-b border-border">
                 <div className="flex items-center gap-3">
                     <SpeakerWaveIcon className="w-6 h-6 text-accent"/>
                     <h2 className="text-xl font-bold text-accent">Chuyển kịch bản thành giọng nói (TTS)</h2>
@@ -97,7 +97,7 @@ export const TtsModal: React.FC<TtsModalProps> = ({ isOpen, onClose, dialogue, v
                 {/* Left: Voice Selection */}
                 <div className="flex flex-col min-h-0">
                     <h3 className="text-lg font-semibold text-text-primary mb-3">1. Chọn một giọng đọc</h3>
-                    <div className="flex-grow bg-primary/50 rounded-lg p-3 overflow-y-auto">
+                    <div className="flex-grow bg-primary/50 rounded-lg p-3 overflow-y-auto border border-border">
                         {isLoadingVoices && <p className="text-center p-4">Đang tải danh sách giọng nói...</p>}
                         {voices.length > 0 && (
                             <ul className="space-y-2">
@@ -120,21 +120,21 @@ export const TtsModal: React.FC<TtsModalProps> = ({ isOpen, onClose, dialogue, v
                     <textarea
                         readOnly
                         value={dialogueText}
-                        className="w-full h-48 bg-primary/70 border border-secondary rounded-md p-3 text-text-primary resize-none mb-4"
+                        className="w-full h-48 bg-primary/70 border border-border rounded-md p-3 text-text-primary resize-none mb-4"
                     />
                     
                     {audioUrl && !isGenerating && (
-                        <div className="bg-primary/50 p-4 rounded-lg space-y-3">
+                        <div className="bg-primary/50 p-4 rounded-lg space-y-3 border border-border">
                             <h4 className="font-semibold">Nghe thử kết quả</h4>
                             <audio controls src={audioUrl} className="w-full"></audio>
-                            <a href={audioUrl} download="script_audio.mp3" className="flex items-center justify-center gap-2 w-full mt-2 text-sm bg-primary/70 hover:bg-primary text-text-secondary font-semibold py-2 px-4 rounded-md transition">
+                            <a href={audioUrl} download="script_audio.mp3" className="flex items-center justify-center gap-2 w-full mt-2 text-sm bg-secondary hover:bg-secondary/70 text-text-secondary font-semibold py-2 px-4 rounded-md transition border border-border">
                                 <DownloadIcon className="w-5 h-5"/>
                                 Tải xuống file MP3
                             </a>
                         </div>
                     )}
                      {isGenerating && (
-                        <div className="bg-primary/50 p-4 rounded-lg flex items-center justify-center text-accent">
+                        <div className="bg-primary/50 p-4 rounded-lg flex items-center justify-center text-accent border border-border">
                             <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -146,17 +146,17 @@ export const TtsModal: React.FC<TtsModalProps> = ({ isOpen, onClose, dialogue, v
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-primary flex justify-end items-center gap-4 flex-wrap">
+            <div className="p-4 border-t border-border flex justify-end items-center gap-4 flex-wrap">
                 {error && <p className="text-red-400 text-sm flex-grow">{error}</p>}
                 {(isGenerating || isLoadingVoices) && <div className="flex-grow text-sm text-accent">Đang xử lý, vui lòng chờ...</div>}
                 
-                <button onClick={onClose} className="bg-primary/70 hover:bg-primary text-text-secondary font-bold py-2 px-4 rounded-md transition">
+                <button onClick={onClose} className="bg-secondary/70 hover:bg-secondary text-text-secondary font-bold py-2 px-4 rounded-md transition border border-border">
                     Đóng
                 </button>
                 <button 
                     onClick={() => onGenerate(selectedVoiceId)}
                     disabled={isGenerating || isLoadingVoices || !selectedVoiceId || !dialogue}
-                    className="bg-accent hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-md transition disabled:opacity-50"
+                    className="bg-accent hover:brightness-110 text-white font-bold py-2 px-4 rounded-md transition disabled:opacity-50"
                 >
                     {isGenerating ? 'Đang tạo...' : 'Tạo Audio'}
                 </button>

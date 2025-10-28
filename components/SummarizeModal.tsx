@@ -53,7 +53,7 @@ const CopyButton: React.FC<{ text: string }> = ({ text }) => {
     return (
         <button
             onClick={handleCopy}
-            className="mt-2 flex items-center space-x-2 bg-primary/70 hover:bg-primary text-text-secondary px-3 py-1.5 rounded-md text-xs font-semibold transition"
+            className="mt-2 flex items-center space-x-2 bg-secondary/70 hover:bg-secondary text-text-secondary px-3 py-1.5 rounded-md text-xs font-semibold transition border border-border"
         >
             <ClipboardIcon className="w-4 h-4" />
             <span>{copied ? 'Đã chép!' : 'Sao chép'}</span>
@@ -98,10 +98,10 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ isOpen, onClose,
             onClick={onClose}
         >
             <div 
-                className="bg-secondary rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col"
+                className="bg-secondary rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col border border-border"
                 onClick={e => e.stopPropagation()}
             >
-                <div className="flex justify-between items-center p-4 border-b border-primary">
+                <div className="flex justify-between items-center p-4 border-b border-border">
                     <h2 className="text-xl font-bold text-accent">Chuyển thể Kịch bản thành Cảnh quay</h2>
                     <button onClick={onClose} className="text-text-secondary hover:text-text-primary text-2xl font-bold">&times;</button>
                 </div>
@@ -111,18 +111,18 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ isOpen, onClose,
                     {!isLoading && !error && summary && (
                         <div className="space-y-8">
                             {summary.map((part, index) => (
-                                <div key={index} className="bg-primary/50 p-4 rounded-lg">
-                                    <h3 className="text-lg font-bold text-accent mb-4 border-b border-secondary pb-2">{part.partTitle}</h3>
+                                <div key={index} className="bg-primary/50 p-4 rounded-lg border border-border/50">
+                                    <h3 className="text-lg font-bold text-accent mb-4 border-b border-border pb-2">{part.partTitle}</h3>
                                     <div className="space-y-4">
                                         {part.scenes.map(scene => (
-                                            <div key={scene.sceneNumber} className="border-t border-secondary/50 pt-3">
+                                            <div key={scene.sceneNumber} className="border-t border-border/50 pt-3">
                                                 <p className="text-sm text-text-secondary"><strong className="text-text-primary font-semibold">Cảnh {scene.sceneNumber} - Tóm tắt (cho ~8s):</strong> {scene.summary}</p>
                                                 <div className="mt-2">
                                                     <label className="block text-xs font-semibold text-text-secondary mb-1">Prompt Video (Tiếng Anh)</label>
                                                     <textarea
                                                         readOnly
                                                         rows={3}
-                                                        className="w-full bg-primary/70 border border-secondary rounded-md p-2 text-text-primary resize-y text-sm font-mono"
+                                                        className="w-full bg-secondary/70 border border-border rounded-md p-2 text-text-primary resize-y text-sm font-mono"
                                                         value={scene.visualPrompt}
                                                     />
                                                     <CopyButton text={scene.visualPrompt} />
@@ -135,19 +135,19 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ isOpen, onClose,
                         </div>
                     )}
                 </div>
-                <div className="p-4 border-t border-primary flex justify-end items-center gap-4">
+                <div className="p-4 border-t border-border flex justify-end items-center gap-4">
                     {isLoading && (
                         <p className="text-xs text-accent flex-grow">Bạn có thể đóng hộp thoại này và quay trở lại sau khi hoàn tất.</p>
                     )}
                     <button 
                         onClick={handleDownloadExcel}
                         disabled={isLoading || !summary || summary.length === 0}
-                        className="flex items-center gap-2 text-sm bg-primary/70 hover:bg-primary text-text-secondary font-semibold py-2 px-4 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-2 text-sm bg-secondary/70 hover:bg-secondary text-text-secondary font-semibold py-2 px-4 rounded-md transition border border-border disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <DownloadIcon className="w-5 h-5" />
                         Download Prompts
                     </button>
-                    <button onClick={onClose} className="bg-accent hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-md transition">
+                    <button onClick={onClose} className="bg-accent hover:brightness-110 text-white font-bold py-2 px-4 rounded-md transition">
                         Đóng
                     </button>
                 </div>

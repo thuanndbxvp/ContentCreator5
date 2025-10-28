@@ -1,4 +1,4 @@
-import type { Tone, Style, Voice, ScriptType, NumberOfSpeakers, AiProvider } from './types';
+import type { Expression, Style, ScriptType, NumberOfSpeakers, AiProvider } from './types';
 
 interface LabeledOption<T> {
   value: T;
@@ -35,15 +35,19 @@ export const NUMBER_OF_SPEAKERS_OPTIONS: LabeledOption<NumberOfSpeakers>[] = [
   { value: '5', label: '5 người' },
 ];
 
-export const TONE_OPTIONS: LabeledOption<Tone>[] = [
+export const EXPRESSION_OPTIONS: LabeledOption<Expression>[] = [
+  { value: 'Conversational', label: 'Thân mật' },
+  { value: 'Humorous', label: 'Hài hước' },
+  { value: 'Authoritative', label: 'Chuyên gia' },
+  { value: 'Personal', label: 'Cá nhân' },
+  { value: 'Empathetic', label: 'Đồng cảm' },
+  { value: 'Professional', label: 'Chuyên nghiệp' },
+  { value: 'Persuasive', label: 'Thuyết phục' },
   { value: 'Formal', label: 'Trang trọng' },
   { value: 'Informative', label: 'Cung cấp thông tin' },
-  { value: 'Conversational', label: 'Thân mật' },
-  { value: 'Persuasive', label: 'Thuyết phục' },
-  { value: 'Humorous', label: 'Hài hước' },
-  { value: 'Empathetic', label: 'Đồng cảm' },
   { value: 'Inspirational', label: 'Truyền cảm hứng' },
 ];
+
 
 export const STYLE_OPTIONS: LabeledOption<Style>[] = [
   { value: 'Narrative', label: 'Kể chuyện' },
@@ -53,16 +57,6 @@ export const STYLE_OPTIONS: LabeledOption<Style>[] = [
   { value: 'Technical', label: 'Kỹ thuật' },
   { value: 'Academic', label: 'Học thuật' },
   { value: 'Business', label: 'Kinh doanh' },
-];
-
-export const VOICE_OPTIONS: LabeledOption<Voice>[] = [
-  { value: 'Authoritative', label: 'Chuyên gia' },
-  { value: 'Conversational', label: 'Trò chuyện' },
-  { value: 'Personal', label: 'Cá nhân' },
-  { value: 'Humorous', label: 'Hài hước' },
-  { value: 'Professional', label: 'Chuyên nghiệp' },
-  { value: 'Empathetic', label: 'Đồng cảm' },
-  { value: 'Persuasive', label: 'Thuyết phục' },
 ];
 
 export const LANGUAGE_OPTIONS: { value: string, label: string }[] = [

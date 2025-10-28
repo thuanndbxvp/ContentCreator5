@@ -43,12 +43,12 @@ export const SideToolsPanel: React.FC<SideToolsPanelProps> = ({
 }) => {
 
     return (
-        <div className="w-full space-y-6">
-            <div className="bg-secondary rounded-lg p-6 shadow-xl space-y-4 sticky top-6">
-                 <h3 className="text-md font-semibold text-text-primary mb-3 text-center">Tiện ích & Cài đặt</h3>
+        <div className="w-full space-y-6 sticky top-[98px]">
+            <div className="bg-secondary/40 p-4 rounded-lg border border-border/50 space-y-3">
+                 <h3 className="text-md font-semibold text-text-primary text-center">Tiện ích & Cài đặt</h3>
                  <button 
                     onClick={onOpenLibrary}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary/70 hover:bg-primary text-text-primary font-semibold rounded-lg transition-colors"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/70 text-text-primary font-semibold rounded-lg transition-colors border border-border"
                     aria-label="Mở thư viện"
                 >
                     <BookOpenIcon className="w-5 h-5"/>
@@ -56,7 +56,7 @@ export const SideToolsPanel: React.FC<SideToolsPanelProps> = ({
                 </button>
                 <button 
                     onClick={onOpenApiKeyModal}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary/70 hover:bg-primary text-text-primary font-semibold rounded-lg transition-colors"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/70 text-text-primary font-semibold rounded-lg transition-colors border border-border"
                     aria-label="Cài đặt API Key"
                 >
                     <CogIcon className="w-5 h-5" />

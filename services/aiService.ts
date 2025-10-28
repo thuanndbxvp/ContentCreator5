@@ -1,6 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import type { GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, StyleOptions, TopicSuggestionItem, AiProvider, ElevenlabsVoice } from '../types';
-import { TONE_OPTIONS, STYLE_OPTIONS, VOICE_OPTIONS } from '../constants';
+import type { GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, StyleOptions, TopicSuggestionItem, AiProvider, ElevenlabsVoice, Expression } from '../types';
+import { EXPRESSION_OPTIONS, STYLE_OPTIONS } from '../constants';
 
 // Helper function to handle API errors and provide more specific messages
 const handleApiError = (error: unknown, context: string): Error => {
@@ -182,7 +182,7 @@ const callApi = async (prompt: string, provider: AiProvider, model: string, json
 
 export const generateScript = async (params: GenerationParams, provider: AiProvider, model: string): Promise<string> => {
     const { title, outlineContent, targetAudience, styleOptions, keywords, formattingOptions, wordCount, scriptParts, scriptType, numberOfSpeakers } = params;
-    const { tone, style, voice } = styleOptions;
+    const { expression, style } = styleOptions;
     const { headings, bullets, bold, includeIntro, includeOutro } = formattingOptions;
 
     const language = targetAudience;
@@ -220,9 +220,8 @@ export const generateScript = async (params: GenerationParams, provider: AiProvi
             - **Sound Cues:** Include sound effect cues where appropriate (e.g., [sound effect of a cash register], [transition sound]).
 
             **AI Writing Style Guide:**
-            - **Tone:** ${tone}. The script should feel conversational and ${tone.toLowerCase()}.
-            - **Style:** ${style}. Structure the content in a ${style.toLowerCase()} manner.
-            - **Voice:** ${voice}. The speakers' personalities should be ${voice.toLowerCase()}.
+            - **Expression/Voice:** ${expression}. The speakers' personalities and the overall feel of the podcast should be ${expression.toLowerCase()}.
+            - **Writing Style:** ${style}. Structure the content in a ${style.toLowerCase()} manner.
 
             **Keywords:** If provided, naturally integrate the following keywords into the conversation: "${keywords || 'None'}".
 
@@ -236,27 +235,34 @@ export const generateScript = async (params: GenerationParams, provider: AiProvi
             Please generate the complete podcast script now.
         `;
     } else { // Video script
-        const addictiveFormulaInstruction = `
-        **CRUCIAL: The "Addictive Video Formula" (MUST FOLLOW)**
-        You must structure the entire script according to these 6 steps. This is a non-negotiable requirement. Adapt the length of each section to meet the total word count.
+       const addictiveFormulaInstruction = `
+        **YOUR MOST IMPORTANT MISSION: The "Addictive Video Formula" (NON-NEGOTIABLE)**
+        You are a master of viewer retention. Your primary directive is to structure the entire script PERFECTLY according to these steps. Failure to follow this structure precisely will result in a failed task. Do not deviate.
 
-        1.  **HOOK (e.g., 0-5s):** Start with a powerful hook that targets a pain point or a strong desire. Make the viewer feel "this video is for me." Use strong emotional language, a shocking fact, or a relatable question.
-        
-        2.  **PROMISE (e.g., 5-10s):** Immediately after the hook, tell the viewer why they should stay. Clearly state the major benefit (The Big Reward) they will receive by the end of the video. This is the bridge from the hook to the final benefit.
+        1.  **THE HOOK (First 3-5 seconds - CRITICAL):** This is make-or-break. You MUST start with a powerful, attention-grabbing hook. Your goal: make the viewer instantly feel "I NEED to watch this."
+            -   **Techniques:** Target a deep pain point ("Are you tired of..."), spark immense curiosity ("This one trick changed everything..."), state a shocking fact, or pose a highly relatable question.
+            -   **Execution:** Be direct, bold, and emotional. No slow introductions.
 
-        3.  **SMALL REWARDS (Main Content):** This is the main body. Break down the content from the user's outline into several "mini-rewards" or checkpoints. The number of these checkpoints should be guided by the "Script Parts" setting (${scriptParts}). After each point, give a quick summary or a practical tip. Use this section to weave in engagement hooks like intriguing promises, open-ended questions, and surprising facts. Create curiosity for the next point.
-        
-        4.  **BIG REWARD (Climax):** Deliver on the promise you made. This is the ultimate solution, the final answer, the "wow" moment. It should be satisfying and valuable.
-        
-        5.  **LINK (Conclusion/CTA):** ${includeOutro ? "Don't end abruptly. Create a smooth transition to another video, a call to action (like, subscribe, comment), or a concluding thought that encourages further engagement. This part serves as the Outro." : "Do not write a separate LINK/Outro part."}
+        2.  **THE PROMISE (Next 5-10 seconds):** Immediately after the hook, you MUST clearly state the value proposition. Tell the viewer exactly what massive benefit (The Big Reward) they will get by the end. This is the bridge that keeps them watching.
+            -   **Example:** "By the end of this video, you will know exactly how to..."
 
-        **Output Format Requirement:**
-        For each of the required steps, you MUST provide the output in this format:
-        **[STEP NAME] (e.g., HOOK)**
+        3.  **THE CONTENT (Main Body - Build Momentum):** This is where you deliver value through "Small Rewards."
+            -   **Structure:** Break down the main content from the user's outline into several checkpoints or steps (guided by the "Script Parts" setting: ${scriptParts}).
+            -   **Viewer Retention Engine:** This is not just listing facts. You MUST create "curiosity loops". At the end of each point, hint at what's coming next ("But that's not even the best part. Next, I'll show you how..."). Use intriguing promises, open-ended questions, and surprising facts to keep the viewer engaged and wanting more.
+            -   **Reward Delivery:** Each point should feel like a mini-win for the viewer.
+
+        4.  **THE BIG REWARD (Climax):** This is the grand finale. You MUST deliver on the promise made at the start. It must be the most valuable part of the video—the ultimate solution, the "wow" moment. Make it feel satisfying and conclusive.
+
+        5.  **THE LINK (Conclusion/CTA):** ${includeOutro ? "Do not end abruptly. You MUST create a smooth transition to a call to action (like, subscribe, comment on a specific question related to the video). This links the current video to a future action, building a community. This section serves as the Outro." : "Do not write a separate LINK/Outro part."}
+
+        **MANDATORY Output Format:**
+        For each step, you MUST strictly use this format. No exceptions.
+        **[STEP NAME IN CAPS] (e.g., THE HOOK)**
         **(Timestamp Estimate)**
         **Lời thoại:** [The dialogue for this part]
         **Gợi ý hình ảnh/cử chỉ:** [Visual cues, camera actions, text overlays, sound effects for this part]
     `;
+
 
         prompt = `
           You are an expert YouTube scriptwriter, trained in the "Addictive Video Formula" to maximize viewer retention. Your task is to generate a compelling video script in ${language}.
@@ -274,9 +280,8 @@ export const generateScript = async (params: GenerationParams, provider: AiProvi
           **Absolute Word Count Mandate:** The final script's total word count MUST be extremely close to ${wordCount || '800'} words. A deviation of more than 10% from this target is strictly forbidden.
           
           **AI Writing Style Guide:**
-          - **Tone:** ${tone}. The script should feel ${tone.toLowerCase()}.
-          - **Style:** ${style}. Structure the content in a ${style.toLowerCase()} manner.
-          - **Voice:** ${voice}. The narrator's personality should be ${voice.toLowerCase()}. Write in a direct "you-me" (bạn-tôi) style.
+          - **Expression/Voice:** ${expression}. The narrator's personality and the overall feel of the script should be ${expression.toLowerCase()}. Write in a direct "you-me" (bạn-tôi) style.
+          - **Writing Style:** ${style}. Structure the content in a ${style.toLowerCase()} manner.
           
           **Keywords:** If provided, naturally integrate the following keywords: "${keywords || 'None'}".
           
@@ -415,7 +420,7 @@ export const generateKeywordSuggestions = async (title: string, outlineContent: 
 
 export const reviseScript = async (originalScript: string, revisionInstruction: string, params: GenerationParams, provider: AiProvider, model: string): Promise<string> => {
     const { targetAudience, styleOptions, wordCount } = params;
-    const { tone, style, voice } = styleOptions;
+    const { expression, style } = styleOptions;
     const language = targetAudience;
 
     const scriptTypeInstruction = params.scriptType === 'Podcast'
@@ -434,7 +439,7 @@ export const reviseScript = async (originalScript: string, revisionInstruction: 
       "${revisionInstruction}"
       **Instructions:**
       - **Absolute Word Count Mandate:** After applying revisions, the new script's total word count MUST be extremely close to ${wordCount} words. This is your highest priority. A deviation of more than 10% is strictly forbidden. You must expand or condense the content to meet this target, even if it means altering the structure of your revisions.
-      - Apply the requested changes while maintaining the original tone, style, and voice: Tone: ${tone}, Style: ${style}, Voice: ${voice}.
+      - Apply the requested changes while maintaining the original style: Expression/Voice: ${expression}, Writing Style: ${style}.
       - Remember to keep the script engaging.
       - The script must remain coherent and flow naturally. The revision must integrate seamlessly.
       - The language must remain ${language}.
@@ -453,7 +458,7 @@ export const reviseScript = async (originalScript: string, revisionInstruction: 
 
 export const generateScriptPart = async (fullOutline: string, previousPartsScript: string, currentPartOutline: string, params: Omit<GenerationParams, 'title' | 'outlineContent'>, provider: AiProvider, model: string): Promise<string> => {
     const { targetAudience, styleOptions, keywords, formattingOptions, wordCount } = params;
-    const { tone, style, voice } = styleOptions;
+    const { expression, style } = styleOptions;
     const { headings, bullets, bold } = formattingOptions;
     const language = targetAudience;
 
@@ -478,7 +483,7 @@ export const generateScriptPart = async (fullOutline: string, previousPartsScrip
       - **Absolute Word Count Mandate:** This specific script part MUST have a word count extremely close to ${partWordCount} words. This is the most critical requirement for this task. Adhere to a strict +/- 10% tolerance. Adjust the level of detail, verbosity, and sentence structure to hit this target precisely. Failure to meet this word count is a failure of the entire task.
       - Write ONLY the script for the current part described in the task.
       - **Crucial:** Ensure the beginning of this part connects smoothly with the end of the previously generated script.
-      - Strictly adhere to the established style guide: Tone: ${tone}, Style: ${style}, Voice: ${voice}.
+      - Strictly adhere to the established style guide: Expression/Voice: ${expression}, Writing Style: ${style}.
       - **Engagement Strategy:** Where appropriate for this specific part, incorporate engaging elements like surprising facts, twists, or open-ended questions to maintain viewer interest. Do not force them if they don't fit naturally.
       - The language must remain ${language}.
       - If provided, naturally integrate these keywords: "${keywords || 'None'}".
@@ -629,28 +634,24 @@ export const summarizeScriptForScenes = async (script: string, provider: AiProvi
 };
 
 export const suggestStyleOptions = async (title: string, outlineContent: string, provider: AiProvider, model: string): Promise<StyleOptions> => {
-    const toneValues = TONE_OPTIONS.map(o => o.value);
+    const expressionValues = EXPRESSION_OPTIONS.map(o => o.value);
     const styleValues = STYLE_OPTIONS.map(o => o.value);
-    const voiceValues = VOICE_OPTIONS.map(o => o.value);
 
     const prompt = `
-        You are an expert YouTube content strategist. Based on the video title and outline provided, your task is to suggest the most suitable Tone, Style, and Voice for the script.
+        You are an expert YouTube content strategist. Based on the video title and outline provided, your task is to suggest the most suitable Expression and Style for the script.
 
         **Video Title:** "${title}"
         **Video Outline/Description:** "${outlineContent}"
 
         You MUST choose exactly one option for each category from the provided lists.
 
-        **Available Tones:**
-        - ${toneValues.join('\n- ')}
+        **Available Expressions:**
+        - ${expressionValues.join('\n- ')}
 
         **Available Styles:**
         - ${styleValues.join('\n- ')}
 
-        **Available Voices:**
-        - ${voiceValues.join('\n- ')}
-
-        Analyze the topic and return a JSON object with three keys: "tone", "style", and "voice". The values for these keys must be one of the exact strings from the lists above. For example, if the topic is about a sad historical event, you might suggest a 'Formal' tone, 'Narrative' style, and 'Empathetic' voice.
+        Analyze the topic and return a JSON object with two keys: "expression", and "style". The values for these keys must be one of the exact strings from the lists above. For example, if the topic is a vlog, you might suggest 'Conversational' expression and 'Narrative' style.
         The output must be ONLY the JSON object, nothing else.
     `;
 
@@ -659,9 +660,8 @@ export const suggestStyleOptions = async (title: string, outlineContent: string,
         const jsonResponse = JSON.parse(responseText);
         
         if (
-            toneValues.includes(jsonResponse.tone) &&
-            styleValues.includes(jsonResponse.style) &&
-            voiceValues.includes(jsonResponse.voice)
+            expressionValues.includes(jsonResponse.expression) &&
+            styleValues.includes(jsonResponse.style)
         ) {
             return jsonResponse as StyleOptions;
         } else {

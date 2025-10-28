@@ -24,11 +24,11 @@ export const ScriptTools: React.FC<ScriptToolsProps> = ({
   onOpenTtsModal,
 }) => {
   return (
-    <div className="bg-secondary rounded-lg p-6 shadow-xl">
+    <div className="bg-secondary/40 p-4 rounded-lg border border-border/50">
         <h3 className="text-md font-semibold text-text-primary mb-3">Công cụ Kịch bản</h3>
         <textarea
             rows={4}
-            className="w-full bg-primary/70 border border-secondary rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition"
+            className="w-full bg-secondary/50 border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition"
             placeholder="Nhập yêu cầu sửa đổi, VD: 'Làm cho phần mở đầu kịch tính hơn'"
             value={revisionPrompt}
             onChange={(e) => setRevisionPrompt(e.target.value)}
@@ -46,11 +46,11 @@ export const ScriptTools: React.FC<ScriptToolsProps> = ({
                 <button
                     onClick={onSummarizeScript}
                     disabled={isLoading || isSummarizing}
-                    className="flex-1 flex items-center justify-center bg-accent hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2 px-3 rounded-lg transition text-sm"
+                    className="flex-1 flex items-center justify-center bg-accent hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2 px-3 rounded-lg transition text-sm"
                 >
                     {isSummarizing ? (
                         <>
-                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>

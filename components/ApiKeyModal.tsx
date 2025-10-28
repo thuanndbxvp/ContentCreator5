@@ -144,21 +144,21 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
         };
 
         return (
-            <div className="bg-primary/50 p-4 rounded-lg border border-secondary flex flex-col">
+            <div className="bg-primary/50 p-4 rounded-lg border border-border flex flex-col">
                 <div className="flex items-center gap-2 mb-3">
                     {icon}
                     <h3 className="font-semibold text-text-primary text-lg">{title}</h3>
                 </div>
                 <label className="text-sm text-text-secondary mb-1">Dán Keys của bạn vào đây (mỗi key một dòng):</label>
                 <textarea
-                    className="w-full h-28 bg-primary/70 border border-secondary rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition font-mono text-sm"
+                    className="w-full h-28 bg-secondary/50 border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition font-mono text-sm"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder="dán_api_key_của_bạn_vào_đây"
                 />
                 <p className="text-xs text-text-secondary/80 mt-1">Lấy key từ {link}. Key ở trên cùng sẽ được ưu tiên sử dụng.</p>
 
-                <div className="mt-4 pt-4 border-t border-secondary/50 flex flex-col items-end">
+                <div className="mt-4 pt-4 border-t border-border/50 flex flex-col items-end">
                     {saveErrors[provider] && <p className="text-red-400 text-xs mb-2 text-right w-full">{saveErrors[provider]}</p>}
                     <button
                         onClick={() => handleSaveProviderKeys(provider)}
@@ -166,7 +166,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
                         className={`flex items-center justify-center text-sm font-bold py-2 px-4 rounded-md transition disabled:opacity-50
                             ${savingStatus[provider] === 'success' 
                                 ? 'bg-green-600 text-white' 
-                                : 'bg-accent hover:bg-orange-600 text-white'
+                                : 'bg-accent hover:brightness-110 text-white'
                             }`
                         }
                     >
@@ -193,8 +193,8 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4" onClick={onClose}>
-            <div className="bg-secondary rounded-lg shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col" onClick={e => e.stopPropagation()}>
-                <div className="p-5 border-b border-primary">
+            <div className="bg-secondary rounded-lg shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col border border-border" onClick={e => e.stopPropagation()}>
+                <div className="p-5 border-b border-border">
                     <h2 className="text-xl font-bold text-accent">Quản lý API Keys</h2>
                     <p className="text-sm text-text-secondary mt-1">Thêm hoặc chỉnh sửa API Keys. Hệ thống sẽ tự động thử các key hợp lệ theo thứ tự từ trên xuống dưới.</p>
                 </div>
@@ -203,8 +203,8 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
                     {renderKeyPanel('openai')}
                     {renderKeyPanel('elevenlabs')}
                 </div>
-                <div className="p-4 bg-primary/30 border-t border-primary flex flex-col sm:flex-row justify-end items-center gap-3">
-                     <button onClick={onClose} className="text-sm bg-secondary hover:bg-primary text-text-secondary font-semibold py-2 px-4 rounded-md transition">
+                <div className="p-4 bg-primary/30 border-t border-border flex flex-col sm:flex-row justify-end items-center gap-3">
+                     <button onClick={onClose} className="text-sm bg-secondary hover:bg-secondary/70 text-text-secondary font-semibold py-2 px-4 rounded-md transition border border-border">
                         Đóng
                     </button>
                 </div>

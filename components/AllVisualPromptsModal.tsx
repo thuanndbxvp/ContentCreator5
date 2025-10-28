@@ -49,7 +49,7 @@ const CopyButton: React.FC<{ text: string }> = ({ text }) => {
     return (
         <button
             onClick={handleCopy}
-            className="mt-2 flex items-center space-x-2 bg-primary/70 hover:bg-primary text-text-secondary px-3 py-1.5 rounded-md text-xs font-semibold transition"
+            className="mt-2 flex items-center space-x-2 bg-secondary/70 hover:bg-secondary text-text-secondary px-3 py-1.5 rounded-md text-xs font-semibold transition border border-border"
         >
             <ClipboardIcon className="w-4 h-4" />
             <span>{copied ? 'Đã chép!' : 'Sao chép'}</span>
@@ -89,10 +89,10 @@ export const AllVisualPromptsModal: React.FC<AllVisualPromptsModalProps> = ({ is
       onClick={onClose}
     >
       <div 
-        className="bg-secondary rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col"
+        className="bg-secondary rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col border border-border"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex justify-between items-center p-4 border-b border-primary">
+        <div className="flex justify-between items-center p-4 border-b border-border">
           <h2 className="text-xl font-bold text-accent">Prompts cho Toàn bộ Kịch bản</h2>
           <button onClick={onClose} className="text-text-secondary hover:text-text-primary text-2xl font-bold">&times;</button>
         </div>
@@ -102,12 +102,12 @@ export const AllVisualPromptsModal: React.FC<AllVisualPromptsModalProps> = ({ is
             {!isLoading && !error && prompts && (
                 <div className="space-y-6">
                     {prompts.map((item, index) => (
-                        <div key={index} className="bg-primary/50 p-4 rounded-lg">
+                        <div key={index} className="bg-primary/50 p-4 rounded-lg border border-border/50">
                             <details>
                                 <summary className="text-sm font-semibold text-accent/90 cursor-pointer hover:text-accent">
                                     Cảnh {index + 1}: {item.scene.split('\n')[0].replace(/^[#\s]+/, '')}
                                 </summary>
-                                <p className="mt-2 text-xs text-text-secondary/80 border-l-2 border-secondary pl-2 italic">
+                                <p className="mt-2 text-xs text-text-secondary/80 border-l-2 border-border pl-2 italic">
                                     {item.scene.length > 200 ? `${item.scene.substring(0, 200)}...` : item.scene}
                                 </p>
                             </details>
@@ -116,7 +116,7 @@ export const AllVisualPromptsModal: React.FC<AllVisualPromptsModalProps> = ({ is
                                 <textarea
                                     readOnly
                                     rows={3}
-                                    className="w-full bg-primary/70 border border-secondary rounded-md p-2 text-text-primary resize-y text-sm"
+                                    className="w-full bg-secondary/70 border border-border rounded-md p-2 text-text-primary resize-y text-sm"
                                     value={item.english}
                                 />
                                 <CopyButton text={item.english} />
@@ -126,7 +126,7 @@ export const AllVisualPromptsModal: React.FC<AllVisualPromptsModalProps> = ({ is
                                 <textarea
                                     readOnly
                                     rows={3}
-                                    className="w-full bg-primary/70 border border-secondary rounded-md p-2 text-text-primary resize-y text-sm"
+                                    className="w-full bg-secondary/70 border border-border rounded-md p-2 text-text-primary resize-y text-sm"
                                     value={item.vietnamese}
                                 />
                                 <CopyButton text={item.vietnamese} />
@@ -136,19 +136,19 @@ export const AllVisualPromptsModal: React.FC<AllVisualPromptsModalProps> = ({ is
                 </div>
             )}
         </div>
-        <div className="p-4 border-t border-primary flex justify-end items-center gap-4">
+        <div className="p-4 border-t border-border flex justify-end items-center gap-4">
             {isLoading && (
                 <p className="text-xs text-accent flex-grow">Bạn có thể đóng hộp thoại này và quay trở lại sau khi hoàn tất.</p>
             )}
             <button 
                 onClick={handleDownloadExcel}
                 disabled={isLoading || !prompts || prompts.length === 0}
-                className="flex items-center gap-2 text-sm bg-primary/70 hover:bg-primary text-text-secondary font-semibold py-2 px-4 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 text-sm bg-secondary/70 hover:bg-secondary text-text-secondary font-semibold py-2 px-4 rounded-md transition border border-border disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 <DownloadIcon className="w-5 h-5" />
                 Download Excel
             </button>
-            <button onClick={onClose} className="bg-accent hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-md transition">
+            <button onClick={onClose} className="bg-accent hover:brightness-110 text-white font-bold py-2 px-4 rounded-md transition">
                 Đóng
             </button>
         </div>

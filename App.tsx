@@ -12,7 +12,7 @@ import { SideToolsPanel } from './components/SideToolsPanel';
 import { TtsModal } from './components/TtsModal';
 import { generateScript, generateScriptOutline, generateTopicSuggestions, reviseScript, generateScriptPart, extractDialogue, generateKeywordSuggestions, validateApiKey, generateVisualPrompt, generateAllVisualPrompts, summarizeScriptForScenes, suggestStyleOptions, parseIdeasFromFile, getElevenlabsVoices, generateElevenlabsTts } from './services/aiService';
 import type { StyleOptions, FormattingOptions, LibraryItem, GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, ScriptType, NumberOfSpeakers, CachedData, TopicSuggestionItem, SavedIdea, AiProvider, WordCountStats, ElevenlabsVoice } from './types';
-import { TONE_OPTIONS, STYLE_OPTIONS, VOICE_OPTIONS, LANGUAGE_OPTIONS, GEMINI_MODELS } from './constants';
+import { STYLE_OPTIONS, LANGUAGE_OPTIONS, GEMINI_MODELS } from './constants';
 
 const YoutubeLogoIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="32" height="24" viewBox="0 0 28 20" fill="none" {...props}>
@@ -59,9 +59,8 @@ const App: React.FC = () => {
   const [outlineContent, setOutlineContent] = useState<string>('');
   const [targetAudience, setTargetAudience] = useState<string>(LANGUAGE_OPTIONS[1].value);
   const [styleOptions, setStyleOptions] = useState<StyleOptions>({
-    tone: TONE_OPTIONS[2].value,
+    expression: 'Conversational',
     style: STYLE_OPTIONS[0].value,
-    voice: VOICE_OPTIONS[1].value,
   });
   const [keywords, setKeywords] = useState<string>('');
   const [formattingOptions, setFormattingOptions] = useState<FormattingOptions>({
@@ -719,13 +718,13 @@ const App: React.FC = () => {
   const hasApiKey = apiKeys[aiProvider] && apiKeys[aiProvider].length > 0;
 
   return (
-    <div className="min-h-screen bg-primary font-sans">
-      <header className="bg-secondary/50 border-b border-secondary p-4 shadow-lg flex justify-between items-center">
+    <div className="min-h-screen bg-primary">
+      <header className="bg-secondary/30 border-b border-border p-4 shadow-sm flex justify-between items-center sticky top-0 z-20 backdrop-blur-sm">
         <div className="flex-1"></div>
         <div className="flex-1 text-center">
             <a href="/" className="inline-flex justify-center items-center gap-3 no-underline transition-opacity hover:opacity-80" style={{ textDecoration: 'none' }}>
               <YoutubeLogoIcon />
-              <h1 className="text-2xl font-bold text-accent">
+              <h1 className="text-2xl font-bold" style={{color: 'var(--color-accent)'}}>
                 Trợ lý Sáng tạo Kịch bản YouTube
               </h1>
             </a>
@@ -737,13 +736,13 @@ const App: React.FC = () => {
             <div className="relative" ref={themeSelectorRef}>
                 <button 
                     onClick={() => setIsThemeSelectorOpen(prev => !prev)}
-                    className="p-2 rounded-full hover:bg-primary transition-colors"
+                    className="p-2 rounded-full hover:bg-secondary transition-colors"
                     aria-label="Chọn màu chủ đề"
                 >
                     <PaletteIcon className="w-5 h-5 text-text-secondary"/>
                 </button>
                 {isThemeSelectorOpen && (
-                    <div className="absolute top-full right-0 mt-2 bg-primary border border-secondary rounded-lg shadow-2xl p-2 flex gap-2 z-10">
+                    <div className="absolute top-full right-0 mt-2 bg-secondary border border-border rounded-lg shadow-2xl p-2 flex gap-2 z-10">
                         {THEMES.map(theme => (
                             <button
                                 key={theme.name}
@@ -752,12 +751,12 @@ const App: React.FC = () => {
                                     setThemeColor(theme.color);
                                     setIsThemeSelectorOpen(false);
                                 }}
-                                className="w-6 h-6 rounded-full transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary focus:ring-white"
+                                className="w-8 h-8 rounded-lg transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary focus:ring-white"
                                 style={{ backgroundColor: theme.color }}
                             >
                                 {themeColor === theme.color && (
                                     <div className="w-full h-full flex items-center justify-center">
-                                        <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                        <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                         </svg>
                                     </div>
@@ -770,8 +769,8 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex flex-col lg:flex-row gap-6 p-4 md:p-6 max-w-screen-2xl mx-auto">
-        <div className="w-full lg:w-[30%] flex-shrink-0">
+      <main className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-4 md:p-6 max-w-[96rem] mx-auto">
+        <div className="lg:col-span-3">
           <ControlPanel
             title={title}
             setTitle={setTitle}
@@ -826,7 +825,7 @@ const App: React.FC = () => {
             setSelectedModel={setSelectedModel}
           />
         </div>
-        <div className="w-full lg:w-[50%]">
+        <div className="lg:col-span-6">
           <OutputDisplay
             script={generatedScript}
             isLoading={isLoading}
@@ -847,7 +846,7 @@ const App: React.FC = () => {
             visualPromptsCache={visualPromptsCache}
           />
         </div>
-         <div className="w-full lg:w-[20%] flex-shrink-0">
+         <div className="lg:col-span-3">
             <SideToolsPanel
                 script={generatedScript}
                 targetWordCount={finalWordCount}
