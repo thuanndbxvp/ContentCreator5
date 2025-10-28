@@ -132,7 +132,7 @@ export const generateScript = async (params: GenerationParams): Promise<string> 
             - **Dialogue Labeling:** Each line of dialogue must start with the character's name followed by a colon (e.g., "Minh Anh:").
 
             **Script Structure & Length:**
-            - **Strict Word Count Target:** The final script MUST be very close to ${wordCount || '800'} words. This is a critical requirement. Do not significantly go over or under this target.
+            - **Absolute Word Count Mandate:** The final script's total word count MUST be extremely close to ${wordCount || '800'} words. This is the most critical requirement. A deviation of more than 5-10% is a failure. You must adjust content verbosity to meet this target.
             - **Introduction:** ${includeIntro ? "Include a captivating introduction with intro music cues [intro music]." : "Do not write a separate introduction."}
             - **Segments:** Structure the podcast into logical segments or talking points, based on the provided outline.
             - **Outro:** ${includeOutro ? "Include a concluding outro with a call-to-action and outro music cues [outro music]." : "Do not write a separate outro."}
@@ -171,7 +171,7 @@ export const generateScript = async (params: GenerationParams): Promise<string> 
           - **Mid-video Soft CTAs:** Re-engage the viewer in the middle of the video. Example in Vietnamese: "Nếu bạn còn xem đến đây, bạn chắc chắn sẽ muốn biết phần sau cùng…"
           
           **Script Structure & Length:**
-          - **Strict Word Count Target:** The final script MUST be very close to ${wordCount || '800'} words. This is a critical requirement. Do not significantly go over or under this target.
+          - **Absolute Word Count Mandate:** The final script's total word count MUST be extremely close to ${wordCount || '800'} words. This is the most critical requirement. A deviation of more than 5-10% is a failure. You must adjust content verbosity to meet this target.
           - **Script Parts:** ${scriptPartsInstruction}
           - **Introduction:** ${includeIntro ? "Include a captivating introduction to hook the viewer, based on the title." : "Do not write a separate introduction."}
           - **Outro:** ${includeOutro ? "Include a concluding outro with a call-to-action." : "Do not write a separate outro."}
@@ -415,7 +415,7 @@ export const reviseScript = async (originalScript: string, revisionInstruction: 
       **User's Revision Request:**
       "${revisionInstruction}"
       **Instructions:**
-      - **Strict Word Count Target:** After applying the revisions, the new script MUST be very close to ${wordCount} words. This is a critical requirement.
+      - **Absolute Word Count Mandate:** After applying revisions, the new script's total word count MUST be extremely close to ${wordCount} words. This is the most critical requirement. A deviation of more than 5-10% is a failure. You must expand or condense the content to meet this target.
       - Apply the requested changes while maintaining the original tone, style, and voice: Tone: ${tone}, Style: ${style}, Voice: ${voice}.
       - Remember to keep the script engaging.
       - The script must remain coherent and flow naturally. The revision must integrate seamlessly.
@@ -461,7 +461,7 @@ export const generateScriptPart = async (fullOutline: string, previousPartsScrip
       ${currentPartOutline}
       """
       **Instructions:**
-      - **Strict Word Count Target:** This script part MUST be very close to ${partWordCount} words. This is a critical requirement.
+      - **Absolute Word Count Mandate:** This specific script part MUST have a word count extremely close to ${partWordCount} words. This is the most critical requirement for this task. A deviation of more than 10% is a failure. You must adjust the level of detail to hit this target.
       - Write ONLY the script for the current part described in the task.
       - **Crucial:** Ensure the beginning of this part connects smoothly with the end of the previously generated script.
       - Strictly adhere to the established style guide: Tone: ${tone}, Style: ${style}, Voice: ${voice}.
