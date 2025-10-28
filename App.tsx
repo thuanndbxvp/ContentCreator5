@@ -12,6 +12,13 @@ import type { StyleOptions, FormattingOptions, LibraryItem, GenerationParams, Vi
 import { TONE_OPTIONS, STYLE_OPTIONS, VOICE_OPTIONS, LANGUAGE_OPTIONS } from './constants';
 import { BookOpenIcon } from './components/icons/BookOpenIcon';
 
+const YoutubeLogoIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="24" viewBox="0 0 28 20" fill="none" {...props}>
+    <path d="M27.42 3.033a3.51 3.51 0 0 0-2.483-2.483C22.768 0 14 0 14 0S5.232 0 3.063.55A3.51 3.51 0 0 0 .58 3.033C0 5.2 0 10 0 10s0 4.8.58 6.967a3.51 3.51 0 0 0 2.483 2.483C5.232 20 14 20 14 20s8.768 0 10.937-.55a3.51 3.51 0 0 0 2.483-2.483C28 14.8 28 10 28 10s0-4.8-.58-6.967z" fill="#FF0000"/>
+    <path d="M11.2 14.286V5.714L18.453 10 11.2 14.286z" fill="#FFFFFF"/>
+  </svg>
+);
+
 const App: React.FC = () => {
   const [topic, setTopic] = useState<string>('');
   const [targetAudience, setTargetAudience] = useState<string>(LANGUAGE_OPTIONS[0].value);
@@ -490,9 +497,12 @@ const App: React.FC = () => {
       <header className="bg-secondary/50 border-b border-secondary p-4 shadow-lg flex justify-between items-center">
         <div className="flex-1"></div>
         <div className="flex-1 text-center">
-            <h1 className="text-2xl font-bold text-accent">
-              Trợ lý Sáng tạo Kịch bản YouTube
-            </h1>
+            <div className="flex justify-center items-center gap-3">
+              <YoutubeLogoIcon />
+              <h1 className="text-2xl font-bold text-accent">
+                Trợ lý Sáng tạo Kịch bản YouTube
+              </h1>
+            </div>
             <p className="text-text-secondary mt-1 text-sm md:text-base">
               Tạo kịch bản hoàn hảo cho video tiếp theo của bạn.
             </p>
