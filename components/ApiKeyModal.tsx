@@ -3,6 +3,7 @@ import { TrashIcon } from './icons/TrashIcon';
 import type { AiProvider } from '../types';
 import { validateApiKey } from '../services/aiService';
 import { Tooltip } from './Tooltip';
+import { CheckIcon } from './icons/CheckIcon';
 
 interface ApiKeyModalProps {
   isOpen: boolean;
@@ -56,109 +57,52 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
     const [openAIKeysInput, setOpenAIKeysInput] = useState('');
     const [elevenLabsKeysInput, setElevenLabsKeysInput] = useState('');
 
-    const [keyStatuses, setKeyStatuses] = useState<Record<string, { status: 'valid' | 'invalid' | 'checking' | 'idle'; error?: string }>>({});
-    const [isChecking, setIsChecking] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
-    const [saveError, setSaveError] = useState<string | null>(null);
+    const [savingStatus, setSavingStatus] = useState<Record<AiProvider, 'idle' | 'saving' | 'success' | 'error'>>({ gemini: 'idle', openai: 'idle', elevenlabs: 'idle' });
+    const [saveErrors, setSaveErrors] = useState<Record<AiProvider, string | null>>({ gemini: null, openai: null, elevenlabs: null });
+
 
     useEffect(() => {
         if (isOpen) {
-            const geminiKeys = currentApiKeys.gemini || [];
-            const openaiKeys = currentApiKeys.openai || [];
-            const elevenlabsKeys = currentApiKeys.elevenlabs || [];
-
-            setGeminiKeysInput(geminiKeys.join('\n'));
-            setOpenAIKeysInput(openaiKeys.join('\n'));
-            setElevenLabsKeysInput(elevenlabsKeys.join('\n'));
-
-            const initialStatuses: Record<string, { status: 'valid' | 'invalid' | 'checking' | 'idle'; error?: string }> = {};
-            [...geminiKeys, ...openaiKeys, ...elevenlabsKeys].forEach(key => {
-                initialStatuses[key] = { status: 'idle' };
-            });
-            setKeyStatuses(initialStatuses);
-            setIsChecking(false);
-            setIsSaving(false);
-            setSaveError(null);
+            setGeminiKeysInput((currentApiKeys.gemini || []).join('\n'));
+            setOpenAIKeysInput((currentApiKeys.openai || []).join('\n'));
+            setElevenLabsKeysInput((currentApiKeys.elevenlabs || []).join('\n'));
+            
+            setSavingStatus({ gemini: 'idle', openai: 'idle', elevenlabs: 'idle' });
+            setSaveErrors({ gemini: null, openai: null, elevenlabs: null });
         }
     }, [isOpen, currentApiKeys]);
 
-    const handleCheckAllKeys = async () => {
-        setIsChecking(true);
-        const allKeys = [
-            ...currentApiKeys.gemini.map(key => ({ key, provider: 'gemini' as AiProvider })),
-            ...currentApiKeys.openai.map(key => ({ key, provider: 'openai' as AiProvider })),
-            ...currentApiKeys.elevenlabs.map(key => ({ key, provider: 'elevenlabs' as AiProvider }))
-        ];
-
-        setKeyStatuses(prev => {
-            const newStatuses = { ...prev };
-            allKeys.forEach(({ key }) => {
-                newStatuses[key] = { status: 'checking' };
-            });
-            return newStatuses;
-        });
-
-        const results = await Promise.allSettled(
-            allKeys.map(({ key, provider }) => validateApiKey(key, provider).catch(err => { throw err; }))
-        );
-
-        setKeyStatuses(prev => {
-            const newStatuses = { ...prev };
-            results.forEach((result, index) => {
-                const { key } = allKeys[index];
-                if (result.status === 'fulfilled') {
-                    newStatuses[key] = { status: 'valid' };
-                } else {
-                    newStatuses[key] = { status: 'invalid', error: result.reason instanceof Error ? result.reason.message : 'Lỗi không xác định' };
-                }
-            });
-            return newStatuses;
-        });
-        setIsChecking(false);
-    };
-
-    const handleSaveAndValidate = async () => {
-        setIsSaving(true);
-        setSaveError(null);
+    const handleSaveProviderKeys = async (provider: AiProvider) => {
+        setSavingStatus(prev => ({ ...prev, [provider]: 'saving' }));
+        setSaveErrors(prev => ({ ...prev, [provider]: null }));
     
-        const newGeminiKeys = geminiKeysInput.split('\n').map(k => k.trim()).filter(Boolean);
-        const newOpenAIKeys = openAIKeysInput.split('\n').map(k => k.trim()).filter(Boolean);
-        const newElevenLabsKeys = elevenLabsKeysInput.split('\n').map(k => k.trim()).filter(Boolean);
-    
-        const newApiKeysState: Record<AiProvider, string[]> = {
-            gemini: newGeminiKeys,
-            openai: newOpenAIKeys,
-            elevenlabs: newElevenLabsKeys,
-        };
-    
-        const allKeysToValidate: { key: string, provider: AiProvider }[] = [
-            ...newGeminiKeys.map(key => ({ key, provider: 'gemini' as AiProvider })),
-            ...newOpenAIKeys.map(key => ({ key, provider: 'openai' as AiProvider })),
-            ...newElevenLabsKeys.map(key => ({ key, provider: 'elevenlabs' as AiProvider })),
-        ];
+        const keysInput = provider === 'gemini' ? geminiKeysInput : provider === 'openai' ? openAIKeysInput : elevenLabsKeysInput;
+        const newKeys = keysInput.split('\n').map(k => k.trim()).filter(Boolean);
     
         try {
-            // Validate all keys concurrently, and add context to error messages
-            const validationPromises = allKeysToValidate.map(({ key, provider }) => 
-                validateApiKey(key, provider).catch(err => {
-                    const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
-                    throw new Error(`[${providerName}] Key ...${key.slice(-4)}: ${err.message}`);
-                })
-            );
+            if (newKeys.length > 0) {
+                const validationPromises = newKeys.map(key => 
+                    validateApiKey(key, provider).catch(err => {
+                        const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
+                        throw new Error(`Key ...${key.slice(-4)} không hợp lệ: ${err.message}`);
+                    })
+                );
+                await Promise.all(validationPromises);
+            }
             
-            await Promise.all(validationPromises);
-            
-            // If all validations pass, save the entire new state
+            const newApiKeysState = { ...currentApiKeys, [provider]: newKeys };
             onSaveKeys(newApiKeysState);
-            onClose();
+
+            setSavingStatus(prev => ({ ...prev, [provider]: 'success' }));
+            setTimeout(() => setSavingStatus(prev => ({ ...prev, [provider]: 'idle' })), 2000);
     
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'An unknown validation error occurred.';
-            setSaveError(`Lỗi xác thực - ${errorMessage}`);
-        } finally {
-            setIsSaving(false);
+            const errorMessage = err instanceof Error ? err.message : 'Lỗi xác thực không xác định.';
+            setSaveErrors(prev => ({ ...prev, [provider]: errorMessage }));
+            setSavingStatus(prev => ({ ...prev, [provider]: 'error' }));
         }
-    };   
+    };
+    
 
     if (!isOpen) return null;
     
@@ -170,7 +114,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
         
         const inputValue = isGemini ? geminiKeysInput : isElevenLabs ? elevenLabsKeysInput : openAIKeysInput;
         const setInputValue = isGemini ? setGeminiKeysInput : isElevenLabs ? setElevenLabsKeysInput : setOpenAIKeysInput;
-        const displayedKeys = inputValue.split('\n').map(k => k.trim()).filter(Boolean);
+        const displayedKeys = (currentApiKeys[provider] || []);
 
         const link = isGemini 
             ? <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Google AI Studio</a>
@@ -178,34 +122,67 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
             ? <a href="https://elevenlabs.io/" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">trang chủ ElevenLabs</a>
             : <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">trang tổng quan OpenAI</a>;
         
+        const getButtonContent = () => {
+            switch (savingStatus[provider]) {
+                case 'saving':
+                    return (
+                        <>
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            Đang lưu...
+                        </>
+                    );
+                case 'success':
+                    return (
+                        <>
+                            <CheckIcon className="w-4 h-4 mr-2" />
+                            Đã lưu!
+                        </>
+                    );
+                default:
+                    return 'Lưu & Kiểm tra';
+            }
+        };
+
         return (
             <div className="bg-primary/50 p-4 rounded-lg border border-secondary flex flex-col">
                 <div className="flex items-center gap-2 mb-3">
                     {icon}
                     <h3 className="font-semibold text-text-primary text-lg">{title}</h3>
                 </div>
-                <label className="text-sm text-text-secondary mb-1">Chỉnh sửa Keys {title} (mỗi key một dòng)</label>
+                <label className="text-sm text-text-secondary mb-1">Dán Keys của bạn vào đây (mỗi key một dòng):</label>
                 <textarea
-                    className="w-full h-40 bg-primary/70 border border-secondary rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition font-mono text-sm"
+                    className="w-full h-28 bg-primary/70 border border-secondary rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition font-mono text-sm"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
+                    placeholder="dán_api_key_của_bạn_vào_đây"
                 />
-                <p className="text-xs text-text-secondary/80 mt-1">Lấy key từ {link}.</p>
-                <div className="mt-4 flex-grow space-y-2 h-32 overflow-y-auto pr-2">
+                <p className="text-xs text-text-secondary/80 mt-1">Lấy key từ {link}. Key ở trên cùng sẽ được ưu tiên sử dụng.</p>
+
+                <div className="mt-4 pt-4 border-t border-secondary/50 flex flex-col items-end">
+                    {saveErrors[provider] && <p className="text-red-400 text-xs mb-2 text-right w-full">{saveErrors[provider]}</p>}
+                    <button
+                        onClick={() => handleSaveProviderKeys(provider)}
+                        disabled={savingStatus[provider] === 'saving'}
+                        className={`flex items-center justify-center text-sm font-bold py-2 px-4 rounded-md transition disabled:opacity-50
+                            ${savingStatus[provider] === 'success' 
+                                ? 'bg-green-600 text-white' 
+                                : 'bg-accent hover:bg-orange-600 text-white'
+                            }`
+                        }
+                    >
+                        {getButtonContent()}
+                    </button>
+                </div>
+
+                <div className="mt-4 flex-grow space-y-2 min-h-[5rem] overflow-y-auto pr-2">
+                    <h4 className="text-xs font-semibold text-text-secondary/80">Keys đang được lưu:</h4>
                     {displayedKeys.length === 0 ? (
-                        <div className="text-center text-sm text-text-secondary pt-8">Chưa có key nào.</div>
+                        <div className="text-center text-sm text-text-secondary pt-4">Chưa có key nào.</div>
                     ) : (
                         displayedKeys.map((key, index) => (
-                            <div key={`${provider}-${key}-${index}`} className={`bg-secondary p-2 rounded-md flex justify-between items-center text-sm transition-all ${index === 0 ? 'border-l-2 border-accent' : ''}`}>
-                                <div className="flex items-center gap-2">
-                                    <Tooltip text={keyStatuses[key]?.error || keyStatuses[key]?.status}>
-                                        <StatusIcon status={keyStatuses[key]?.status || 'idle'} />
-                                    </Tooltip>
-                                    <span className="font-mono text-text-secondary">{`...${key.slice(-6)}`}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    {index === 0 && <span className="text-xs font-bold text-accent bg-primary/50 px-2 py-0.5 rounded-full">ACTIVE</span>}
-                                </div>
+                            <div key={`${provider}-${index}`} className={`bg-secondary p-2 rounded-md flex justify-between items-center text-sm transition-all ${index === 0 ? 'border-l-2 border-accent' : ''}`}>
+                                <span className="font-mono text-text-secondary">{`...${key.slice(-6)}`}</span>
+                                {index === 0 && <span className="text-xs font-bold text-accent bg-primary/50 px-2 py-0.5 rounded-full">ACTIVE</span>}
                             </div>
                         ))
                     )}
@@ -216,29 +193,20 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4" onClick={onClose}>
-            <div className="bg-secondary rounded-lg shadow-2xl w-full max-w-6xl" onClick={e => e.stopPropagation()}>
+            <div className="bg-secondary rounded-lg shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col" onClick={e => e.stopPropagation()}>
                 <div className="p-5 border-b border-primary">
                     <h2 className="text-xl font-bold text-accent">Quản lý API Keys</h2>
                     <p className="text-sm text-text-secondary mt-1">Thêm hoặc chỉnh sửa API Keys. Hệ thống sẽ tự động thử các key hợp lệ theo thứ tự từ trên xuống dưới.</p>
                 </div>
-                <div className="p-5 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="p-5 grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-y-auto">
                     {renderKeyPanel('gemini')}
                     {renderKeyPanel('openai')}
                     {renderKeyPanel('elevenlabs')}
                 </div>
                 <div className="p-4 bg-primary/30 border-t border-primary flex flex-col sm:flex-row justify-end items-center gap-3">
-                    {saveError && <p className="text-red-400 text-sm text-left flex-grow mr-4">{saveError}</p>}
-                    <div className="flex flex-wrap justify-end items-center gap-3">
-                        <button onClick={handleCheckAllKeys} disabled={isChecking || isSaving} className="text-sm bg-secondary hover:bg-primary text-text-secondary font-semibold py-2 px-4 rounded-md transition disabled:opacity-50">
-                           {isChecking ? 'Đang kiểm tra...' : 'Kiểm tra lại API Keys'}
-                        </button>
-                        <button onClick={handleSaveAndValidate} disabled={isSaving || isChecking} className="text-sm bg-accent hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-md transition disabled:opacity-50">
-                            {isSaving ? 'Đang lưu...' : 'Lưu và kiểm tra tất cả'}
-                        </button>
-                        <button onClick={onClose} className="text-sm bg-secondary hover:bg-primary text-text-secondary font-semibold py-2 px-4 rounded-md transition">
-                            Đóng
-                        </button>
-                    </div>
+                     <button onClick={onClose} className="text-sm bg-secondary hover:bg-primary text-text-secondary font-semibold py-2 px-4 rounded-md transition">
+                        Đóng
+                    </button>
                 </div>
             </div>
         </div>
