@@ -8,6 +8,7 @@ import { VisualPromptModal } from './components/VisualPromptModal';
 import { AllVisualPromptsModal } from './components/AllVisualPromptsModal';
 import { SummarizeModal } from './components/SummarizeModal';
 import { SavedIdeasModal } from './components/SavedIdeasModal';
+import { SideToolsPanel } from './components/SideToolsPanel';
 import { generateScript, generateScriptOutline, generateTopicSuggestions, reviseScript, generateScriptPart, extractDialogue, generateKeywordSuggestions, validateApiKey, generateVisualPrompt, generateAllVisualPrompts, summarizeScriptForScenes, suggestStyleOptions, parseIdeasFromFile } from './services/geminiService';
 import type { StyleOptions, FormattingOptions, LibraryItem, GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, ScriptType, NumberOfSpeakers, CachedData, TopicSuggestionItem, SavedIdea } from './types';
 import { TONE_OPTIONS, STYLE_OPTIONS, VOICE_OPTIONS, LANGUAGE_OPTIONS } from './constants';
@@ -601,6 +602,10 @@ const App: React.FC = () => {
     }
   }, [isGeneratingSequentially, currentPartIndex, generatedScript, outlineParts, handleGenerateNextPart]);
 
+  const finalWordCount = lengthType === 'duration' && videoDuration
+      ? (parseInt(videoDuration, 10) * 150).toString()
+      : wordCount;
+
   return (
     <div className="min-h-screen bg-primary font-sans">
       <header className="bg-secondary/50 border-b border-secondary p-4 shadow-lg flex justify-between items-center">
@@ -668,8 +673,8 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex flex-col md:flex-row gap-6 p-4 md:p-6 max-w-7xl mx-auto">
-        <div className="w-full md:w-2/5 lg:w-1/3 flex-shrink-0">
+      <main className="flex flex-col lg:flex-row gap-6 p-4 md:p-6 max-w-screen-2xl mx-auto">
+        <div className="w-full lg:w-4/12 flex-shrink-0">
           <ControlPanel
             title={title}
             setTitle={setTitle}
@@ -717,7 +722,7 @@ const App: React.FC = () => {
             uploadedIdeas={uploadedIdeas}
           />
         </div>
-        <div className="w-full md:w-3/5 lg:w-2/3">
+        <div className="w-full lg:w-5/12">
           <OutputDisplay
             script={generatedScript}
             isLoading={isLoading}
@@ -728,24 +733,31 @@ const App: React.FC = () => {
             onGenerateNextPart={handleGenerateNextPart}
             currentPart={currentPartIndex}
             totalParts={outlineParts.length}
-            revisionPrompt={revisionPrompt}
-            setRevisionPrompt={setRevisionPrompt}
-            onRevise={handleReviseScript}
             revisionCount={revisionCount}
             onExtractDialogue={handleExtractDialogue}
             isExtracting={isExtracting}
             onGenerateVisualPrompt={handleGenerateVisualPrompt}
             onGenerateAllVisualPrompts={handleGenerateAllVisualPrompts}
             isGeneratingAllVisualPrompts={isGeneratingAllVisualPrompts}
-            onSummarizeScript={handleSummarizeScript}
-            isSummarizing={isSummarizing}
             scriptType={scriptType}
             hasExtractedDialogue={hasExtractedDialogue}
             hasGeneratedAllVisualPrompts={hasGeneratedAllVisualPrompts}
-            hasSummarizedScript={hasSummarizedScript}
             hasSavedToLibrary={hasSavedToLibrary}
             visualPromptsCache={visualPromptsCache}
           />
+        </div>
+         <div className="w-full lg:w-3/12 flex-shrink-0">
+            <SideToolsPanel
+                script={generatedScript}
+                targetWordCount={finalWordCount}
+                revisionPrompt={revisionPrompt}
+                setRevisionPrompt={setRevisionPrompt}
+                onRevise={handleReviseScript}
+                onSummarizeScript={handleSummarizeScript}
+                isLoading={isLoading}
+                isSummarizing={isSummarizing}
+                hasSummarizedScript={hasSummarizedScript}
+            />
         </div>
       </main>
       <LibraryModal 

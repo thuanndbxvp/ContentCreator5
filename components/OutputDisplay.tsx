@@ -20,21 +20,15 @@ interface OutputDisplayProps {
   onGenerateNextPart: () => void;
   currentPart: number;
   totalParts: number;
-  revisionPrompt: string;
-  setRevisionPrompt: (prompt: string) => void;
-  onRevise: () => void;
   revisionCount: number;
   onExtractDialogue: () => void;
   isExtracting: boolean;
   onGenerateVisualPrompt: (scene: string) => void;
   onGenerateAllVisualPrompts: () => void;
   isGeneratingAllVisualPrompts: boolean;
-  onSummarizeScript: () => void;
-  isSummarizing: boolean;
   scriptType: ScriptType;
   hasExtractedDialogue: boolean;
   hasGeneratedAllVisualPrompts: boolean;
-  hasSummarizedScript: boolean;
   hasSavedToLibrary: boolean;
   visualPromptsCache: Map<string, VisualPrompt>;
 }
@@ -84,12 +78,11 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({
     script, isLoading, error, 
     onSaveToLibrary, onStartSequentialGenerate,
     isGeneratingSequentially, onGenerateNextPart, currentPart, totalParts,
-    revisionPrompt, setRevisionPrompt, onRevise, revisionCount,
+    revisionCount,
     onExtractDialogue, isExtracting, onGenerateVisualPrompt,
     onGenerateAllVisualPrompts, isGeneratingAllVisualPrompts,
-    onSummarizeScript, isSummarizing,
     scriptType,
-    hasExtractedDialogue, hasGeneratedAllVisualPrompts, hasSummarizedScript, hasSavedToLibrary,
+    hasExtractedDialogue, hasGeneratedAllVisualPrompts, hasSavedToLibrary,
     visualPromptsCache
 }) => {
     const [copySuccess, setCopySuccess] = useState('');
@@ -246,50 +239,6 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({
                 <button onClick={onGenerateNextPart} className="w-full flex items-center justify-center bg-accent hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-lg transition">
                     Tiếp tục tạo phần {currentPart + 1}/{totalParts}
                 </button>
-            </div>
-        )}
-        {showActionControls && !isOutline && (
-            <div className="p-4 border-t border-primary bg-primary/30">
-                <h3 className="text-md font-semibold text-text-primary mb-2">Công cụ Kịch bản</h3>
-                <textarea
-                    rows={3}
-                    className="w-full bg-primary/70 border border-secondary rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition"
-                    placeholder="Nhập yêu cầu sửa đổi, VD: 'Làm cho phần mở đầu kịch tính hơn'"
-                    value={revisionPrompt}
-                    onChange={(e) => setRevisionPrompt(e.target.value)}
-                    disabled={isLoading}
-                />
-                <div className="mt-2 flex flex-col sm:flex-row gap-2">
-                    <button
-                        onClick={onRevise}
-                        disabled={!revisionPrompt.trim() || isLoading}
-                        className="flex-1 flex items-center justify-center bg-secondary hover:bg-primary disabled:bg-primary/50 disabled:cursor-not-allowed text-text-primary font-bold py-2 px-4 rounded-lg transition"
-                    >
-                        <PencilIcon className="w-5 h-5 mr-2" />
-                        Sửa Kịch bản
-                    </button>
-                     <button
-                        onClick={onSummarizeScript}
-                        disabled={isLoading || isSummarizing}
-                        className="flex-1 flex items-center justify-center bg-secondary hover:bg-primary disabled:bg-primary/50 disabled:cursor-not-allowed text-text-primary font-bold py-2 px-4 rounded-lg transition"
-                    >
-                        {isSummarizing ? (
-                            <>
-                                <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Đang chuyển thể...
-                            </>
-                        ) : (
-                            <>
-                                <FilmIcon className="w-5 h-5 mr-2" />
-                                Chuyển thể kịch bản
-                            </>
-                        )}
-                        {hasSummarizedScript && !isSummarizing && <CheckIcon className="w-5 h-5 text-green-400 ml-2" />}
-                    </button>
-                </div>
             </div>
         )}
     </div>
