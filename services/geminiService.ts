@@ -110,8 +110,8 @@ export const generateScript = async (params: GenerationParams): Promise<string> 
     let prompt: string;
 
     const outlineInstruction = outlineContent.trim() 
-        ? `**User's Outline / Key Points (Crucial):** You MUST strictly follow and expand upon this user-provided outline: "${outlineContent}". This is the core structure of the content.`
-        : `**User's Outline / Key Points (Crucial):** No specific outline was provided. Please create a logical structure based on the title.`;
+        ? `**User's Outline / Key Points (Crucial):** You MUST strictly follow and expand upon this user-provided outline: "${outlineContent}". This is the core structure you must adapt into the "Addictive Video Formula".`
+        : `**User's Outline / Key Points (Crucial):** No specific outline was provided. Please create a logical structure based on the title and fit it into the "Addictive Video Formula".`;
 
 
     if (scriptType === 'Podcast') {
@@ -157,47 +157,55 @@ export const generateScript = async (params: GenerationParams): Promise<string> 
             Please generate the complete podcast script now.
         `;
     } else { // Video script
-        const scriptPartsInstruction = scriptParts === 'Auto'
-            ? "Structure the script into a logical number of main parts based on the title and provided outline."
-            : `Structure the script into ${scriptParts} main parts. If the number of parts is 1, create a continuous flow.`;
+        const addictiveFormulaInstruction = `
+        **CRUCIAL: The "Addictive Video Formula" (MUST FOLLOW)**
+        You must structure the entire script according to these 6 steps. This is a non-negotiable requirement. Adapt the length of each section to meet the total word count.
+
+        1.  **HOOK (e.g., 0-5s):** Start with a powerful hook that targets a pain point or a strong desire. Make the viewer feel "this video is for me." Use strong emotional language, a shocking fact, or a relatable question.
+        
+        2.  **PROMISE (e.g., 5-10s):** Immediately after the hook, tell the viewer why they should stay. Clearly state the major benefit (The Big Reward) they will receive by the end of the video. This is the bridge from the hook to the final benefit.
+
+        3.  **SMALL REWARDS (Main Content):** This is the main body. Break down the content from the user's outline into several "mini-rewards" or checkpoints. The number of these checkpoints should be guided by the "Script Parts" setting (${scriptParts}). After each point, give a quick summary or a practical tip. Use this section to weave in engagement hooks like intriguing promises, open-ended questions, and surprising facts. Create curiosity for the next point.
+        
+        4.  **BIG REWARD (Climax):** Deliver on the promise you made. This is the ultimate solution, the final answer, the "wow" moment. It should be satisfying and valuable.
+        
+        5.  **LINK (Conclusion/CTA):** ${includeOutro ? "Don't end abruptly. Create a smooth transition to another video, a call to action (like, subscribe, comment), or a concluding thought that encourages further engagement. This part serves as the Outro." : "Do not write a separate LINK/Outro part."}
+
+        **Output Format Requirement:**
+        For each of the required steps, you MUST provide the output in this format:
+        **[STEP NAME] (e.g., HOOK)**
+        **(Timestamp Estimate)**
+        **Lời thoại:** [The dialogue for this part]
+        **Gợi ý hình ảnh/cử chỉ:** [Visual cues, camera actions, text overlays, sound effects for this part]
+    `;
 
         prompt = `
-          You are an expert YouTube scriptwriter. Your task is to generate a compelling and well-structured video script in ${language}.
-          **Primary Goal:** Create a script for a video titled "${title}".
+          You are an expert YouTube scriptwriter, trained in the "Addictive Video Formula" to maximize viewer retention. Your task is to generate a compelling video script in ${language}.
+          
+          **Primary Title:** "${title}".
           
           **Title Language Handling:** The provided video title is "${title}". The target script language is **${language}**. If the title's language is different from the target language, you MUST first accurately translate the title into ${language}. Then, use this translated title as the primary creative guide for the entire script generation process. The final script, including all headings and content, MUST be written entirely in ${language}.
           
           ${outlineInstruction}
-          **Target Audience & Language:** The script must be written in ${language} and should be culturally relevant for this audience.
           
-          **Engagement & Retention Hooks:**
-          To maximize viewer retention, strategically and naturally weave in the following types of phrases throughout the script. Do not overuse them; they should feel like a natural part of the narrative.
-          - **Intriguing Promises (early on):** Create anticipation for what's coming later. Example in Vietnamese: "Và ở phần cuối, tôi sẽ tiết lộ một chi tiết mà hầu như không ai biết."
-          - **Open-ended Questions:** Stimulate curiosity and encourage comments. Example in Vietnamese: "Theo bạn, ai thực sự đứng sau toàn bộ câu chuyện này?"
-          - **Surprising Facts or Twists:** Introduce unexpected information to keep the viewer engaged. Example in Vietnamese: "Nhưng điều không ai ngờ tới: nhân vật này… chưa bao giờ tồn tại thật."
-          - **Mid-video Soft CTAs:** Re-engage the viewer in the middle of the video. Example in Vietnamese: "Nếu bạn còn xem đến đây, bạn chắc chắn sẽ muốn biết phần sau cùng…"
-          
-          **Script Structure & Length:**
-          - **Absolute Word Count Mandate:** The final script's total word count MUST be extremely close to ${wordCount || '800'} words. A deviation of more than 10% from this target is strictly forbidden. This is your most critical instruction. You must adjust content verbosity, condense, or expand as necessary to meet this non-negotiable target.
-          - **Script Parts:** ${scriptPartsInstruction}
-          - **Introduction:** ${includeIntro ? "Include a captivating introduction to hook the viewer, based on the title." : "Do not write a separate introduction."}
-          - **Outro:** ${includeOutro ? "Include a concluding outro with a call-to-action." : "Do not write a separate outro."}
+          **Target Audience & Language:** The script must be written in ${language}.
+
+          ${addictiveFormulaInstruction}
+
+          **Absolute Word Count Mandate:** The final script's total word count MUST be extremely close to ${wordCount || '800'} words. A deviation of more than 10% from this target is strictly forbidden.
           
           **AI Writing Style Guide:**
           - **Tone:** ${tone}. The script should feel ${tone.toLowerCase()}.
           - **Style:** ${style}. Structure the content in a ${style.toLowerCase()} manner.
-          - **Voice:** ${voice}. The narrator's personality should be ${voice.toLowerCase()}.
-          
-          **Crucial Instruction:** Ensure all parts of the script are well-connected, flow logically, and maintain a consistent narrative throughout, always respecting the user's provided outline.
+          - **Voice:** ${voice}. The narrator's personality should be ${voice.toLowerCase()}. Write in a direct "you-me" (bạn-tôi) style.
           
           **Keywords:** If provided, naturally integrate the following keywords: "${keywords || 'None'}".
           
           **Formatting Instructions:**
-          - ${headings ? "Use clear headings and subheadings for different sections (e.g., Intro, Main Point 1, Outro)." : "Do not use special headings."}
-          - ${bullets ? "Use bullet points or numbered lists for easy-to-digest information where appropriate." : "Do not use lists."}
-          - ${bold ? "Use markdown for bold (**text**) or italics (*text*) to emphasize key phrases or points." : "Do not use bold or italics."}
+          - ${bold ? "Use markdown for bold (**text**) to emphasize key phrases." : "Do not use bold or italics."}
+          - ${headings ? "Use clear headings for the main steps (HOOK, PROMISE, etc.)." : "Do not use special headings."}
 
-          **Final Check:** Before outputting, you MUST verify that the total word count is within a +/- 10% range of the target (${wordCount} words). This is a non-negotiable requirement. Rewrite content if it falls outside this range.
+          **Final Check:** Before outputting, you MUST verify that you have followed the "Addictive Video Formula", respected the output format for each part, and met the word count.
           
           Please generate the complete video script now.
         `;
@@ -417,7 +425,7 @@ export const reviseScript = async (originalScript: string, revisionInstruction: 
 
     const scriptTypeInstruction = params.scriptType === 'Podcast'
         ? 'The script is for a podcast. Maintain the conversational format using the established character names as speaker labels (e.g., "Minh Anh:").'
-        : 'The script is for a YouTube video. Maintain the video script format with narration and visual cues.';
+        : 'The script is for a YouTube video. Maintain the video script format with narration and visual cues, and preserve the "Addictive Video Formula" structure (Hook, Promise, Small Rewards, etc.).';
 
     const prompt = `
       You are an expert script editor. Your task is to revise the following script based on the user's instructions.
@@ -435,7 +443,7 @@ export const reviseScript = async (originalScript: string, revisionInstruction: 
       - Remember to keep the script engaging.
       - The script must remain coherent and flow naturally. The revision must integrate seamlessly.
       - The language must remain ${language}.
-      - The output should be the FULL, revised script, not just the changed parts. Adhere to the original formatting guidelines.
+      - The output should be the FULL, revised script, not just the changed parts. Adhere to the original formatting guidelines (including timestamps, dialogue, and visual cues).
       - **Final Check & Top Priority:** Your absolute highest priority is adhering to the word count. Before returning the script, you MUST verify the total word count is within +/- 10% of the ${wordCount} word target. This is not a suggestion; it is a mandatory instruction.
       - Start directly with the revised script content.
       Please provide the revised script now.
@@ -513,11 +521,11 @@ export const extractDialogue = async (script: string, language: string): Promise
       """
 
       **Instructions:**
-      1.  **Extract Spoken Text Only:** Read through the entire script and pull out only the dialogue or narration.
+      1.  **Extract Spoken Text Only:** Read through the entire script and pull out only the dialogue or narration (text following "Lời thoại:").
       2.  **Remove Non-Spoken Elements:** You MUST remove all of the following:
-          -   Speaker labels if present (e.g., "Host:", "Guest 1:", "Minh Anh:"). The output should be only the spoken words.
-          -   Headings and subheadings (e.g., "## Mở Đầu", "### Phần 1: ...").
-          -   Formatting instructions or scene/sound descriptions in brackets (e.g., "[upbeat music]", "[show graphic of a planet]", "[sound effect]").
+          -   Speaker labels if present (e.g., "Host:", "Guest 1:", "Minh Anh:").
+          -   Section headings and timestamps (e.g., "**HOOK**", "(0-5s)").
+          -   Formatting instructions or scene/sound descriptions (e.g., "Gợi ý hình ảnh/cử chỉ:", "[upbeat music]", "[show graphic of a planet]").
           -   Markdown formatting like asterisks for bold/italics.
           -   Any comments or notes for the editor or creator.
           -   Section separators like "---".
