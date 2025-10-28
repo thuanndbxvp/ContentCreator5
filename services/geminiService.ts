@@ -123,6 +123,8 @@ export const generateScript = async (params: GenerationParams): Promise<string> 
             You are an expert Podcast scriptwriter. Your task is to generate a compelling and well-structured podcast script in ${language}.
 
             **Primary Title:** "${title}".
+            **Title Language Handling:** The provided video title is "${title}". The target script language is **${language}**. If the title's language is different from the target language, you MUST first accurately translate the title into ${language}. Then, use this translated title as the primary creative guide for the entire script generation process. The final script, including all headings and content, MUST be written entirely in ${language}.
+            
             ${outlineInstruction}
             **Target Audience & Language:** The script must be written in ${language}.
 
@@ -160,6 +162,9 @@ export const generateScript = async (params: GenerationParams): Promise<string> 
         prompt = `
           You are an expert YouTube scriptwriter. Your task is to generate a compelling and well-structured video script in ${language}.
           **Primary Goal:** Create a script for a video titled "${title}".
+          
+          **Title Language Handling:** The provided video title is "${title}". The target script language is **${language}**. If the title's language is different from the target language, you MUST first accurately translate the title into ${language}. Then, use this translated title as the primary creative guide for the entire script generation process. The final script, including all headings and content, MUST be written entirely in ${language}.
+          
           ${outlineInstruction}
           **Target Audience & Language:** The script must be written in ${language} and should be culturally relevant for this audience.
           
@@ -302,7 +307,7 @@ export const parseIdeasFromFile = async (fileContent: string): Promise<TopicSugg
     if (!fileContent.trim()) return [];
     const prompt = `
         You are a data extraction assistant. Your task is to parse the provided text content, which contains a list of YouTube video ideas, and convert it into a structured JSON format.
-        The text is in Vietnamese and generally follows a structure with a title line (e.g., "> Tiêu đề (Tiếng Việt):") and an outline section (e.g., "> Nội dung phác họa:").
+        The text may contain original titles in other languages and Vietnamese titles.
 
         **Input Text:**
         """
@@ -311,10 +316,12 @@ export const parseIdeasFromFile = async (fileContent: string): Promise<TopicSugg
 
         **Instructions:**
         1.  Carefully analyze the text and identify each distinct idea block.
-        2.  For each block, extract the Vietnamese title. Ignore any original English title if present.
-        3.  Extract the multi-line text that constitutes the outline.
-        4.  The final output MUST be a JSON array of objects. Each object must have a 'title' key and an 'outline' key.
-        5.  If the input text is empty, malformed, or contains no recognizable ideas, return an empty JSON array.
+        2.  For each block, extract the following:
+            -   **'title'**: This MUST be the original title. Look for patterns like "> Tiêu đề (Original):". If an original title is not found, use the Vietnamese title as the main title.
+            -   **'vietnameseTitle'**: This MUST be the Vietnamese title. Look for patterns like "> Tiêu đề (Tiếng Việt):". If only one title is present, use it for both 'title' and 'vietnameseTitle'.
+            -   **'outline'**: Extract the multi-line text that constitutes the outline (usually after "> Nội dung phác họa:").
+        3.  The final output MUST be a JSON array of objects. Each object must have a 'title', 'vietnameseTitle', and 'outline' key.
+        4.  If the input text is empty, malformed, or contains no recognizable ideas, return an empty JSON array.
 
         Please generate the JSON array now.
     `;
@@ -328,11 +335,15 @@ export const parseIdeasFromFile = async (fileContent: string): Promise<TopicSugg
                  responseMimeType: "application/json",
                  responseSchema: {
                     type: Type.ARRAY,
-                    description: "A list of video ideas, each with a title and outline.",
+                    description: "A list of video ideas, each with a title, Vietnamese title, and outline.",
                     items: { 
                         type: Type.OBJECT,
                         properties: {
                             title: {
+                                type: Type.STRING,
+                                description: "The extracted original video title. Falls back to Vietnamese title if original is not present."
+                            },
+                            vietnameseTitle: {
                                 type: Type.STRING,
                                 description: "The extracted Vietnamese video title."
                             },
@@ -341,14 +352,14 @@ export const parseIdeasFromFile = async (fileContent: string): Promise<TopicSugg
                                 description: "The extracted video outline."
                             }
                         },
-                        required: ['title', 'outline']
+                        required: ['title', 'vietnameseTitle', 'outline']
                     }
                  }
              }
         });
         
         const jsonResponse = JSON.parse(response.text);
-        if (Array.isArray(jsonResponse) && (jsonResponse.length === 0 || (typeof jsonResponse[0].title === 'string' && typeof jsonResponse[0].outline === 'string'))) {
+        if (Array.isArray(jsonResponse)) {
             return jsonResponse as TopicSuggestionItem[];
         }
         throw new Error("AI returned data in an unexpected format.");

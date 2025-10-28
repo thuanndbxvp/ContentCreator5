@@ -24,12 +24,14 @@ export interface FormattingOptions {
 
 export interface TopicSuggestionItem {
     title: string;
+    vietnameseTitle?: string;
     outline: string;
 }
 
 export interface SavedIdea {
   id: number;
   title: string;
+  vietnameseTitle?: string;
   outline: string;
 }
 

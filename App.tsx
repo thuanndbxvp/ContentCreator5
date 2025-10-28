@@ -268,13 +268,15 @@ const App: React.FC = () => {
     setIsLibraryOpen(false);
   }, []);
   
-    const handleSaveIdea = useCallback((ideaToSave: { title: string; outline: string }) => {
+    const handleSaveIdea = useCallback((ideaToSave: TopicSuggestionItem) => {
         if (savedIdeas.some(idea => idea.title === ideaToSave.title && idea.outline === ideaToSave.outline)) {
             return;
         }
         const newIdea: SavedIdea = {
             id: Date.now(),
-            ...ideaToSave,
+            title: ideaToSave.title,
+            vietnameseTitle: ideaToSave.vietnameseTitle,
+            outline: ideaToSave.outline,
         };
         setSavedIdeas(prev => [newIdea, ...prev]);
     }, [savedIdeas]);

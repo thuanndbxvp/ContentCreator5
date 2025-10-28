@@ -50,7 +50,7 @@ interface ControlPanelProps {
   videoDuration: string;
   setVideoDuration: (duration: string) => void;
   savedIdeas: SavedIdea[];
-  onSaveIdea: (idea: { title: string; outline: string }) => void;
+  onSaveIdea: (idea: TopicSuggestionItem) => void;
   onOpenSavedIdeasModal: () => void;
   onParseFile: (content: string) => void;
   isParsingFile: boolean;
@@ -119,6 +119,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             {ideaList.map((idea, index) => (
                 <div key={`${listTitle}-${idea.title}-${index}`} className="text-left text-sm w-full p-3 rounded-md bg-primary/70">
                   <strong className="text-text-primary block">{idea.title}</strong>
+                  {idea.vietnameseTitle && idea.vietnameseTitle !== idea.title && <span className="text-xs mt-1 block text-accent/80">{idea.vietnameseTitle}</span>}
                   <span className="text-xs mt-1 block text-text-secondary">{idea.outline}</span>
                   <div className="flex items-center gap-2 mt-2">
                     <button 
