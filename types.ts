@@ -27,6 +27,12 @@ export interface TopicSuggestionItem {
     outline: string;
 }
 
+export interface SavedIdea {
+  id: number;
+  title: string;
+  outline: string;
+}
+
 export interface CachedData {
   visualPrompts: Record<string, VisualPrompt>;
   allVisualPrompts: AllVisualPromptsResult[] | null;

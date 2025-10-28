@@ -298,6 +298,66 @@ export const generateTopicSuggestions = async (theme: string): Promise<TopicSugg
     }
 };
 
+export const parseIdeasFromFile = async (fileContent: string): Promise<TopicSuggestionItem[]> => {
+    if (!fileContent.trim()) return [];
+    const prompt = `
+        You are a data extraction assistant. Your task is to parse the provided text content, which contains a list of YouTube video ideas, and convert it into a structured JSON format.
+        The text is in Vietnamese and generally follows a structure with a title line (e.g., "> Tiêu đề (Tiếng Việt):") and an outline section (e.g., "> Nội dung phác họa:").
+
+        **Input Text:**
+        """
+        ${fileContent}
+        """
+
+        **Instructions:**
+        1.  Carefully analyze the text and identify each distinct idea block.
+        2.  For each block, extract the Vietnamese title. Ignore any original English title if present.
+        3.  Extract the multi-line text that constitutes the outline.
+        4.  The final output MUST be a JSON array of objects. Each object must have a 'title' key and an 'outline' key.
+        5.  If the input text is empty, malformed, or contains no recognizable ideas, return an empty JSON array.
+
+        Please generate the JSON array now.
+    `;
+    
+    try {
+        const ai = getApiClient();
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                 responseMimeType: "application/json",
+                 responseSchema: {
+                    type: Type.ARRAY,
+                    description: "A list of video ideas, each with a title and outline.",
+                    items: { 
+                        type: Type.OBJECT,
+                        properties: {
+                            title: {
+                                type: Type.STRING,
+                                description: "The extracted Vietnamese video title."
+                            },
+                            outline: {
+                                type: Type.STRING,
+                                description: "The extracted video outline."
+                            }
+                        },
+                        required: ['title', 'outline']
+                    }
+                 }
+             }
+        });
+        
+        const jsonResponse = JSON.parse(response.text);
+        if (Array.isArray(jsonResponse) && (jsonResponse.length === 0 || (typeof jsonResponse[0].title === 'string' && typeof jsonResponse[0].outline === 'string'))) {
+            return jsonResponse as TopicSuggestionItem[];
+        }
+        throw new Error("AI returned data in an unexpected format.");
+
+    } catch (error) {
+        throw handleApiError(error, 'phân tích tệp ý tưởng');
+    }
+};
+
 export const generateKeywordSuggestions = async (title: string, outlineContent: string): Promise<string[]> => {
     if (!title.trim()) return [];
     const prompt = `Based on the video title "${title}" and the outline "${outlineContent}", generate at least 5 relevant, SEO-friendly keywords. The keywords should be in Vietnamese.`;

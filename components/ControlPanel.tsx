@@ -1,11 +1,15 @@
 import React from 'react';
 import { OptionSelector } from './OptionSelector';
 import { SparklesIcon } from './icons/SparklesIcon';
-import type { StyleOptions, FormattingOptions, Tone, Style, Voice, ScriptType, NumberOfSpeakers, TopicSuggestionItem } from '../types';
+import type { StyleOptions, FormattingOptions, Tone, Style, Voice, ScriptType, NumberOfSpeakers, TopicSuggestionItem, SavedIdea } from '../types';
 import { TONE_OPTIONS, STYLE_OPTIONS, VOICE_OPTIONS, LANGUAGE_OPTIONS, SCRIPT_TYPE_OPTIONS, NUMBER_OF_SPEAKERS_OPTIONS } from '../constants';
 import { IdeaBrainstorm } from './IdeaBrainstorm';
 import { Tooltip } from './Tooltip';
 import { TONE_EXPLANATIONS, STYLE_EXPLANATIONS, VOICE_EXPLANATIONS, FORMATTING_EXPLANATIONS } from '../constants/explanations';
+import { BookmarkIcon } from './icons/BookmarkIcon';
+import { IdeaFileUploader } from './IdeaFileUploader';
+import { LightbulbIcon } from './icons/LightbulbIcon';
+
 
 interface ControlPanelProps {
   title: string;
@@ -45,6 +49,13 @@ interface ControlPanelProps {
   setLengthType: (type: 'words' | 'duration') => void;
   videoDuration: string;
   setVideoDuration: (duration: string) => void;
+  savedIdeas: SavedIdea[];
+  onSaveIdea: (idea: { title: string; outline: string }) => void;
+  onOpenSavedIdeasModal: () => void;
+  onParseFile: (content: string) => void;
+  isParsingFile: boolean;
+  parsingFileError: string | null;
+  uploadedIdeas: TopicSuggestionItem[];
 }
 
 export const ControlPanel: React.FC<ControlPanelProps> = ({
@@ -63,6 +74,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   numberOfSpeakers, setNumberOfSpeakers,
   onSuggestStyle, isSuggestingStyle, styleSuggestionError,
   lengthType, setLengthType, videoDuration, setVideoDuration,
+  savedIdeas, onSaveIdea, onOpenSavedIdeasModal,
+  onParseFile, isParsingFile, parsingFileError, uploadedIdeas
 }) => {
   const handleCheckboxChange = (key: keyof FormattingOptions, value: boolean) => {
     setFormattingOptions({ ...formattingOptions, [key]: value });
@@ -71,6 +84,46 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   const handleAddKeyword = (keyword: string) => {
     setKeywords(keywords ? `${keywords}, ${keyword}` : keyword);
   };
+  
+  const isIdeaSaved = (idea: TopicSuggestionItem) => {
+    return savedIdeas.some(saved => saved.title === idea.title && saved.outline === idea.outline);
+  };
+
+  const IdeaList: React.FC<{
+    ideaList: TopicSuggestionItem[], 
+    listTitle: string,
+  }> = ({ ideaList, listTitle }) => (
+    <div className="mt-4 space-y-2">
+        <p className="text-sm font-medium text-text-secondary">{listTitle}:</p>
+        <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
+            {ideaList.map((idea, index) => (
+                <div key={index} className="text-left text-sm w-full p-3 rounded-md bg-primary/70">
+                  <strong className="text-text-primary block">{idea.title}</strong>
+                  <span className="text-xs mt-1 block text-text-secondary">{idea.outline}</span>
+                  <div className="flex items-center gap-2 mt-2">
+                    <button 
+                      onClick={() => {
+                        setTitle(idea.title);
+                        setOutlineContent(idea.outline);
+                      }}
+                      className="text-xs bg-accent/80 hover:bg-accent text-white px-2 py-1 rounded-md transition"
+                    >
+                        Sử dụng
+                    </button>
+                    <button 
+                      onClick={() => onSaveIdea(idea)}
+                      disabled={isIdeaSaved(idea)}
+                      className="flex items-center gap-1 text-xs bg-secondary hover:bg-primary text-text-secondary px-2 py-1 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <BookmarkIcon className="w-3 h-3"/>
+                      {isIdeaSaved(idea) ? 'Đã lưu' : 'Lưu'}
+                    </button>
+                  </div>
+                </div>
+            ))}
+        </div>
+    </div>
+  );
 
   return (
     <div className="bg-secondary rounded-lg p-6 shadow-xl space-y-6">
@@ -93,47 +146,41 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
           onChange={(e) => setOutlineContent(e.target.value)}
         />
         <IdeaBrainstorm setTitle={setTitle} setOutlineContent={setOutlineContent} />
-        <button 
-          onClick={onGenerateSuggestions} 
-          disabled={isSuggesting || !title}
-          className="w-full mt-4 flex items-center justify-center bg-secondary hover:bg-primary disabled:bg-primary/50 disabled:cursor-not-allowed text-text-primary font-bold py-2 px-4 rounded-lg transition"
-        >
-          {isSuggesting ? (
-            <>
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Đang tìm ý tưởng...
-            </>
-          ) : (
-            <>
-              <SparklesIcon className="w-5 h-5 mr-2" />
-              Gợi ý từ AI
-            </>
-          )}
-        </button>
+        <IdeaFileUploader 
+            onParse={onParseFile}
+            isLoading={isParsingFile}
+            error={parsingFileError}
+        />
+        <div className="grid grid-cols-2 gap-2 mt-4">
+            <button 
+              onClick={onGenerateSuggestions} 
+              disabled={isSuggesting || !title}
+              className="w-full flex items-center justify-center bg-secondary hover:bg-primary disabled:bg-primary/50 disabled:cursor-not-allowed text-text-primary font-bold py-2 px-4 rounded-lg transition"
+            >
+              {isSuggesting ? (
+                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : (
+                <>
+                  <SparklesIcon className="w-5 h-5 mr-2" />
+                  Gợi ý AI
+                </>
+              )}
+            </button>
+            <button 
+              onClick={onOpenSavedIdeasModal} 
+              className="w-full flex items-center justify-center bg-secondary hover:bg-primary text-text-primary font-bold py-2 px-4 rounded-lg transition"
+            >
+              <LightbulbIcon className="w-5 h-5 mr-2" />
+              Kho Ý Tưởng
+            </button>
+        </div>
+
         {suggestionError && <p className="text-red-400 text-sm mt-2">{suggestionError}</p>}
-        {suggestions.length > 0 && (
-            <div className="mt-4 space-y-2">
-                <p className="text-sm font-medium text-text-secondary">Chọn một gợi ý hoặc giữ nguyên ý tưởng của bạn:</p>
-                <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
-                    {suggestions.map((suggestion, index) => (
-                        <button 
-                          key={index} 
-                          onClick={() => {
-                            setTitle(suggestion.title);
-                            setOutlineContent(suggestion.outline);
-                          }} 
-                          className="text-left text-sm w-full p-3 rounded-md bg-primary/70 hover:bg-primary text-text-secondary hover:text-text-primary transition"
-                        >
-                          <strong className="text-text-primary block">{suggestion.title}</strong>
-                          <span className="text-xs mt-1 block">{suggestion.outline}</span>
-                        </button>
-                    ))}
-                </div>
-            </div>
-        )}
+        {suggestions.length > 0 && <IdeaList ideaList={suggestions} listTitle="Gợi ý từ AI" />}
+        {uploadedIdeas.length > 0 && <IdeaList ideaList={uploadedIdeas} listTitle="Ý tưởng từ File của bạn" />}
       </div>
       
       <div>
@@ -349,33 +396,33 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
               </Tooltip>
             )}
         </div>
-        <div className="space-y-2 mt-4">
+        <div className="grid grid-cols-2 gap-y-2 gap-x-4 mt-4">
             <Tooltip text={FORMATTING_EXPLANATIONS.includeIntro} className="block">
-                <label className="flex items-center space-x-3 cursor-pointer">
+                <label className="flex items-center space-x-2 cursor-pointer">
                     <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" checked={formattingOptions.includeIntro} onChange={(e) => handleCheckboxChange('includeIntro', e.target.checked)} />
                     <span className="text-text-primary">Bao gồm Intro</span>
                 </label>
             </Tooltip>
              <Tooltip text={FORMATTING_EXPLANATIONS.includeOutro} className="block">
-                <label className="flex items-center space-x-3 cursor-pointer">
+                <label className="flex items-center space-x-2 cursor-pointer">
                     <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" checked={formattingOptions.includeOutro} onChange={(e) => handleCheckboxChange('includeOutro', e.target.checked)} />
                     <span className="text-text-primary">Bao gồm Outro</span>
                 </label>
             </Tooltip>
             <Tooltip text={FORMATTING_EXPLANATIONS.headings} className="block">
-                <label className="flex items-center space-x-3 cursor-pointer">
+                <label className="flex items-center space-x-2 cursor-pointer">
                     <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" checked={formattingOptions.headings} onChange={(e) => handleCheckboxChange('headings', e.target.checked)} />
                     <span className="text-text-primary capitalize">Sử dụng Tiêu đề</span>
                 </label>
             </Tooltip>
             <Tooltip text={FORMATTING_EXPLANATIONS.bullets} className="block">
-                <label className="flex items-center space-x-3 cursor-pointer">
+                <label className="flex items-center space-x-2 cursor-pointer">
                     <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" checked={formattingOptions.bullets} onChange={(e) => handleCheckboxChange('bullets', e.target.checked)} />
                     <span className="text-text-primary capitalize">Sử dụng Gạch đầu dòng</span>
                 </label>
             </Tooltip>
              <Tooltip text={FORMATTING_EXPLANATIONS.bold} className="block">
-                <label className="flex items-center space-x-3 cursor-pointer">
+                <label className="flex items-center space-x-2 cursor-pointer">
                     <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent bg-primary/70" checked={formattingOptions.bold} onChange={(e) => handleCheckboxChange('bold', e.target.checked)} />
                     <span className="text-text-primary capitalize">Sử dụng In đậm/nghiêng</span>
                 </label>

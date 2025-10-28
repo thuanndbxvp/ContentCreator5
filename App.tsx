@@ -7,8 +7,9 @@ import { ApiKeyModal } from './components/ApiKeyModal';
 import { VisualPromptModal } from './components/VisualPromptModal';
 import { AllVisualPromptsModal } from './components/AllVisualPromptsModal';
 import { SummarizeModal } from './components/SummarizeModal';
-import { generateScript, generateScriptOutline, generateTopicSuggestions, reviseScript, generateScriptPart, extractDialogue, generateKeywordSuggestions, validateApiKey, generateVisualPrompt, generateAllVisualPrompts, summarizeScriptForScenes, suggestStyleOptions } from './services/geminiService';
-import type { StyleOptions, FormattingOptions, LibraryItem, GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, ScriptType, NumberOfSpeakers, CachedData, TopicSuggestionItem } from './types';
+import { SavedIdeasModal } from './components/SavedIdeasModal';
+import { generateScript, generateScriptOutline, generateTopicSuggestions, reviseScript, generateScriptPart, extractDialogue, generateKeywordSuggestions, validateApiKey, generateVisualPrompt, generateAllVisualPrompts, summarizeScriptForScenes, suggestStyleOptions, parseIdeasFromFile } from './services/geminiService';
+import type { StyleOptions, FormattingOptions, LibraryItem, GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, ScriptType, NumberOfSpeakers, CachedData, TopicSuggestionItem, SavedIdea } from './types';
 import { TONE_OPTIONS, STYLE_OPTIONS, VOICE_OPTIONS, LANGUAGE_OPTIONS } from './constants';
 import { BookOpenIcon } from './components/icons/BookOpenIcon';
 
@@ -68,6 +69,10 @@ const App: React.FC = () => {
   const [isSuggesting, setIsSuggesting] = useState<boolean>(false);
   const [suggestionError, setSuggestionError] = useState<string | null>(null);
 
+  const [uploadedIdeas, setUploadedIdeas] = useState<TopicSuggestionItem[]>([]);
+  const [isParsing, setIsParsing] = useState<boolean>(false);
+  const [parsingError, setParsingError] = useState<string | null>(null);
+
   const [keywordSuggestions, setKeywordSuggestions] = useState<string[]>([]);
   const [isSuggestingKeywords, setIsSuggestingKeywords] = useState<boolean>(false);
   const [keywordSuggestionError, setKeywordSuggestionError] = useState<string | null>(null);
@@ -77,6 +82,9 @@ const App: React.FC = () => {
 
   const [library, setLibrary] = useState<LibraryItem[]>([]);
   const [isLibraryOpen, setIsLibraryOpen] = useState<boolean>(false);
+
+  const [savedIdeas, setSavedIdeas] = useState<SavedIdea[]>([]);
+  const [isSavedIdeasModalOpen, setIsSavedIdeasModalOpen] = useState<boolean>(false);
 
   const [revisionPrompt, setRevisionPrompt] = useState<string>('');
   const [revisionCount, setRevisionCount] = useState<number>(0);
@@ -129,20 +137,20 @@ const App: React.FC = () => {
   useEffect(() => {
     try {
       const savedLibrary = localStorage.getItem('yt-script-library');
-      if (savedLibrary) {
-        setLibrary(JSON.parse(savedLibrary));
-      }
+      if (savedLibrary) setLibrary(JSON.parse(savedLibrary));
+      
+      const savedIdeasData = localStorage.getItem('yt-script-saved-ideas');
+      if (savedIdeasData) setSavedIdeas(JSON.parse(savedIdeasData));
+      
       const savedApiKeys = localStorage.getItem('gemini-api-keys');
       if (savedApiKeys) {
         const parsedKeys = JSON.parse(savedApiKeys);
-        if (Array.isArray(parsedKeys)) {
-            setApiKeys(parsedKeys);
-        }
+        if (Array.isArray(parsedKeys)) setApiKeys(parsedKeys);
       }
+      
       const savedTheme = localStorage.getItem('yt-script-theme');
-      if (savedTheme) {
-        setThemeColor(savedTheme);
-      }
+      if (savedTheme) setThemeColor(savedTheme);
+
     } catch (e) {
       console.error("Failed to load data from localStorage", e);
     }
@@ -152,6 +160,10 @@ const App: React.FC = () => {
     localStorage.setItem('yt-script-theme', themeColor);
     document.documentElement.style.setProperty('--color-accent', themeColor);
   }, [themeColor]);
+  
+  useEffect(() => {
+    localStorage.setItem('yt-script-saved-ideas', JSON.stringify(savedIdeas));
+  }, [savedIdeas]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -255,6 +267,41 @@ const App: React.FC = () => {
     setHasSavedToLibrary(true); // Since it's loaded from the library, it's considered saved.
     setIsLibraryOpen(false);
   }, []);
+  
+    const handleSaveIdea = useCallback((ideaToSave: { title: string; outline: string }) => {
+        if (savedIdeas.some(idea => idea.title === ideaToSave.title && idea.outline === ideaToSave.outline)) {
+            return;
+        }
+        const newIdea: SavedIdea = {
+            id: Date.now(),
+            ...ideaToSave,
+        };
+        setSavedIdeas(prev => [newIdea, ...prev]);
+    }, [savedIdeas]);
+
+    const handleDeleteIdea = useCallback((id: number) => {
+        setSavedIdeas(prev => prev.filter(idea => idea.id !== id));
+    }, []);
+
+    const handleLoadIdea = useCallback((idea: SavedIdea) => {
+        setTitle(idea.title);
+        setOutlineContent(idea.outline);
+        setIsSavedIdeasModalOpen(false);
+    }, []);
+
+    const handleParseFile = useCallback(async (fileContent: string) => {
+        setIsParsing(true);
+        setParsingError(null);
+        setUploadedIdeas([]);
+        try {
+            const ideas = await parseIdeasFromFile(fileContent);
+            setUploadedIdeas(ideas);
+        } catch (err) {
+            setParsingError(err instanceof Error ? err.message : 'Lỗi không xác định khi phân tích file.');
+        } finally {
+            setIsParsing(false);
+        }
+    }, []);
 
   const handleGenerateSuggestions = useCallback(async () => {
     if (!title.trim()) {
@@ -659,6 +706,13 @@ const App: React.FC = () => {
             setLengthType={setLengthType}
             videoDuration={videoDuration}
             setVideoDuration={setVideoDuration}
+            savedIdeas={savedIdeas}
+            onSaveIdea={handleSaveIdea}
+            onOpenSavedIdeasModal={() => setIsSavedIdeasModalOpen(true)}
+            onParseFile={handleParseFile}
+            isParsingFile={isParsing}
+            parsingFileError={parsingError}
+            uploadedIdeas={uploadedIdeas}
           />
         </div>
         <div className="w-full md:w-3/5 lg:w-2/3">
@@ -698,6 +752,13 @@ const App: React.FC = () => {
         library={library}
         onLoad={handleLoadScript}
         onDelete={handleDeleteScript}
+      />
+      <SavedIdeasModal
+        isOpen={isSavedIdeasModalOpen}
+        onClose={() => setIsSavedIdeasModalOpen(false)}
+        ideas={savedIdeas}
+        onLoad={handleLoadIdea}
+        onDelete={handleDeleteIdea}
       />
       <DialogueModal
         isOpen={isDialogueModalOpen}
