@@ -31,7 +31,7 @@ interface OutputDisplayProps {
 }
 
 const GeneratingIndicator: React.FC<{text: string}> = ({ text }) => (
-    <div className="w-full bg-accent/90 rounded-lg p-3 flex items-center justify-center space-x-3 shadow-lg">
+    <div className="w-full bg-primary rounded-lg p-3 flex items-center justify-center space-x-3 shadow-lg">
         <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
         <span className="text-white font-semibold">{text}</span>
     </div>
@@ -127,7 +127,7 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({
     const renderContent = () => {
         if (isLoading && !script) {
             return (
-                <div className="flex items-center justify-center h-full">
+                <div className="flex items-start justify-center h-full">
                     <div className="w-full max-w-md">
                         <GeneratingIndicator text="Đang tạo..." />
                     </div>
@@ -225,12 +225,12 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({
         </div>
         <div className="p-6 overflow-y-auto flex-grow min-h-[400px]">
             <div className="w-full h-full">
-                {renderContent()}
                 {isLoading && script && (
-                    <div className="mt-4">
+                    <div className="mb-4">
                         <GeneratingIndicator text="Đang sửa đổi..." />
                     </div>
                 )}
+                {renderContent()}
             </div>
         </div>
         {isGeneratingSequentially && currentPart < totalParts && !isLoading && (
