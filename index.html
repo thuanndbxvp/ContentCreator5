@@ -13,7 +13,7 @@
             colors: {
               'primary': '#1e293b',
               'secondary': '#334155',
-              'accent': '#6366f1',
+              'accent': 'var(--color-accent)',
               'text-primary': '#f8fafc',
               'text-secondary': '#cbd5e1',
             },
@@ -22,6 +22,9 @@
       }
     </script>
     <style>
+      :root {
+        --color-accent: #f97316; /* Default accent color */
+      }
       .tooltip-text {
         visibility: hidden;
         opacity: 0;

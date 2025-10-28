@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { ControlPanel } from './components/ControlPanel';
 import { OutputDisplay } from './components/OutputDisplay';
 import { LibraryModal } from './components/LibraryModal';
@@ -18,6 +18,23 @@ const YoutubeLogoIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <path d="M11.2 14.286V5.714L18.453 10 11.2 14.286z" fill="#FFFFFF"/>
   </svg>
 );
+
+const PaletteIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.375 3.375 0 013.375 17.625a3.375 3.375 0 013.375-3.375h1.5a3.375 3.375 0 013.375 3.375v1.5a3.375 3.375 0 01-3.375 3.375h-1.5z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 15.75a3.375 3.375 0 013.375-3.375h1.5a3.375 3.375 0 013.375 3.375v1.5a3.375 3.375 0 01-3.375 3.375h-1.5a3.375 3.375 0 01-3.375-3.375zM9 9.75a3.375 3.375 0 013.375-3.375h1.5a3.375 3.375 0 013.375 3.375v1.5a3.375 3.375 0 01-3.375 3.375h-1.5A3.375 3.375 0 019 11.25v-1.5z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9.75a3.375 3.375 0 013.375-3.375h1.5a3.375 3.375 0 013.375 3.375v1.5a3.375 3.375 0 01-3.375 3.375h-1.5a3.375 3.375 0 01-3.375-3.375zM9 3.75a3.375 3.375 0 013.375-3.375h1.5a3.375 3.375 0 013.375 3.375v1.5A3.375 3.375 0 0113.875 9h-1.5A3.375 3.375 0 019 5.25v-1.5z" />
+  </svg>
+);
+
+const THEMES = [
+  { name: 'Indigo', color: '#6366f1' },
+  { name: 'Red', color: '#ef4444' },
+  { name: 'Orange', color: '#f97316' },
+  { name: 'Green', color: '#22c55e' },
+  { name: 'Blue', color: '#3b82f6' },
+];
+
 
 const App: React.FC = () => {
   const [topic, setTopic] = useState<string>('');
@@ -100,6 +117,11 @@ const App: React.FC = () => {
   const [hasSummarizedScript, setHasSummarizedScript] = useState<boolean>(false);
   const [hasSavedToLibrary, setHasSavedToLibrary] = useState<boolean>(false);
 
+  // Theme state
+  const [themeColor, setThemeColor] = useState<string>(THEMES[2].color);
+  const [isThemeSelectorOpen, setIsThemeSelectorOpen] = useState<boolean>(false);
+  const themeSelectorRef = useRef<HTMLDivElement>(null);
+
 
   useEffect(() => {
     try {
@@ -113,12 +135,31 @@ const App: React.FC = () => {
         if (Array.isArray(parsedKeys)) {
             setApiKeys(parsedKeys);
         }
-      } else {
-        setIsApiKeyModalOpen(true);
+      }
+      const savedTheme = localStorage.getItem('yt-script-theme');
+      if (savedTheme) {
+        setThemeColor(savedTheme);
       }
     } catch (e) {
       console.error("Failed to load data from localStorage", e);
     }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('yt-script-theme', themeColor);
+    document.documentElement.style.setProperty('--color-accent', themeColor);
+  }, [themeColor]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (themeSelectorRef.current && !themeSelectorRef.current.contains(event.target as Node)) {
+        setIsThemeSelectorOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
   
   const resetCachesAndStates = () => {
@@ -508,6 +549,39 @@ const App: React.FC = () => {
             </p>
         </div>
         <div className="flex-1 flex justify-end items-center gap-4">
+            <div className="relative" ref={themeSelectorRef}>
+                <button 
+                    onClick={() => setIsThemeSelectorOpen(prev => !prev)}
+                    className="p-2 rounded-full hover:bg-primary transition-colors"
+                    aria-label="Chọn màu chủ đề"
+                >
+                    <PaletteIcon className="w-5 h-5 text-text-secondary"/>
+                </button>
+                {isThemeSelectorOpen && (
+                    <div className="absolute top-full right-0 mt-2 bg-primary border border-secondary rounded-lg shadow-2xl p-2 flex gap-2 z-10">
+                        {THEMES.map(theme => (
+                            <button
+                                key={theme.name}
+                                aria-label={`Đặt chủ đề thành ${theme.name}`}
+                                onClick={() => {
+                                    setThemeColor(theme.color);
+                                    setIsThemeSelectorOpen(false);
+                                }}
+                                className="w-6 h-6 rounded-full transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary focus:ring-white"
+                                style={{ backgroundColor: theme.color }}
+                            >
+                                {themeColor === theme.color && (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                        <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
             <button 
                 onClick={() => setIsLibraryOpen(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-primary text-text-primary font-semibold rounded-lg transition-colors"
