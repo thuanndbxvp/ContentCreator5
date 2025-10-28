@@ -8,13 +8,17 @@ interface WordCountStats {
 const calculateWordCounts = (script: string): WordCountStats => {
     if (!script) return { sections: [], total: 0 };
 
-    const sections = script.split(/(?=^##\s|###\s)/m).filter(s => s.trim());
+    // Corrected regex to split on headings (## or ###) only at the start of a line.
+    const sections = script.split(/(?=^(?:##|###)\s)/m).filter(s => s.trim());
     let total = 0;
     
-    if (sections.length === 0) {
+    if (sections.length === 0 && script.trim().length > 0) {
         const totalCount = script.split(/\s+/).filter(Boolean).length;
-        if (totalCount === 0) return { sections: [], total: 0 };
         return { sections: [{ title: 'Toàn bộ kịch bản', count: totalCount }], total: totalCount };
+    }
+    
+    if (sections.length === 0) {
+        return { sections: [], total: 0 };
     }
 
     const sectionCounts = sections.map((section, index) => {

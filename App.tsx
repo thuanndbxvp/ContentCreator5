@@ -12,7 +12,6 @@ import { SideToolsPanel } from './components/SideToolsPanel';
 import { generateScript, generateScriptOutline, generateTopicSuggestions, reviseScript, generateScriptPart, extractDialogue, generateKeywordSuggestions, validateApiKey, generateVisualPrompt, generateAllVisualPrompts, summarizeScriptForScenes, suggestStyleOptions, parseIdeasFromFile } from './services/geminiService';
 import type { StyleOptions, FormattingOptions, LibraryItem, GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, ScriptType, NumberOfSpeakers, CachedData, TopicSuggestionItem, SavedIdea } from './types';
 import { TONE_OPTIONS, STYLE_OPTIONS, VOICE_OPTIONS, LANGUAGE_OPTIONS } from './constants';
-import { BookOpenIcon } from './components/icons/BookOpenIcon';
 
 const YoutubeLogoIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="32" height="24" viewBox="0 0 28 20" fill="none" {...props}>
@@ -655,26 +654,11 @@ const App: React.FC = () => {
                     </div>
                 )}
             </div>
-            <button 
-                onClick={() => setIsLibraryOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-primary text-text-primary font-semibold rounded-lg transition-colors"
-                aria-label="Mở thư viện"
-            >
-                <BookOpenIcon className="w-5 h-5"/>
-                <span className="hidden md:inline">Thư viện</span>
-            </button>
-            <button 
-                onClick={() => setIsApiKeyModalOpen(true)}
-                className="px-4 py-2 bg-secondary hover:bg-primary text-text-primary font-semibold rounded-lg transition-colors"
-                aria-label="Cài đặt API Key"
-            >
-                API
-            </button>
         </div>
       </header>
 
       <main className="flex flex-col lg:flex-row gap-6 p-4 md:p-6 max-w-screen-2xl mx-auto">
-        <div className="w-full lg:w-4/12 flex-shrink-0">
+        <div className="w-full lg:w-[30%] flex-shrink-0">
           <ControlPanel
             title={title}
             setTitle={setTitle}
@@ -722,7 +706,7 @@ const App: React.FC = () => {
             uploadedIdeas={uploadedIdeas}
           />
         </div>
-        <div className="w-full lg:w-5/12">
+        <div className="w-full lg:w-[50%]">
           <OutputDisplay
             script={generatedScript}
             isLoading={isLoading}
@@ -746,7 +730,7 @@ const App: React.FC = () => {
             visualPromptsCache={visualPromptsCache}
           />
         </div>
-         <div className="w-full lg:w-3/12 flex-shrink-0">
+         <div className="w-full lg:w-[20%] flex-shrink-0">
             <SideToolsPanel
                 script={generatedScript}
                 targetWordCount={finalWordCount}
@@ -757,6 +741,8 @@ const App: React.FC = () => {
                 isLoading={isLoading}
                 isSummarizing={isSummarizing}
                 hasSummarizedScript={hasSummarizedScript}
+                onOpenLibrary={() => setIsLibraryOpen(true)}
+                onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
             />
         </div>
       </main>

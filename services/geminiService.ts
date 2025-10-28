@@ -134,7 +134,7 @@ export const generateScript = async (params: GenerationParams): Promise<string> 
             - **Dialogue Labeling:** Each line of dialogue must start with the character's name followed by a colon (e.g., "Minh Anh:").
 
             **Script Structure & Length:**
-            - **Absolute Word Count Mandate:** The final script's total word count MUST be extremely close to ${wordCount || '800'} words. This is the most critical requirement. A deviation of more than 5-10% is a failure. You must adjust content verbosity to meet this target.
+            - **Absolute Word Count Mandate:** The final script's total word count MUST be extremely close to ${wordCount || '800'} words. A deviation of more than 10% from this target is strictly forbidden. This is your most critical instruction. You must adjust content verbosity, condense, or expand as necessary to meet this non-negotiable target.
             - **Introduction:** ${includeIntro ? "Include a captivating introduction with intro music cues [intro music]." : "Do not write a separate introduction."}
             - **Segments:** Structure the podcast into logical segments or talking points, based on the provided outline.
             - **Outro:** ${includeOutro ? "Include a concluding outro with a call-to-action and outro music cues [outro music]." : "Do not write a separate outro."}
@@ -151,6 +151,8 @@ export const generateScript = async (params: GenerationParams): Promise<string> 
             - ${headings ? "Use clear headings for different segments." : "Do not use special headings."}
             - ${bullets ? "Use bullet points for lists within a speaker's dialogue." : "Do not use lists."}
             - ${bold ? "Use markdown for bold (**text**) to emphasize key phrases." : "Do not use bold."}
+
+            **Final Check:** Before outputting, you MUST verify that the total word count is within a +/- 10% range of the target (${wordCount} words). This is a non-negotiable requirement. Rewrite content if it falls outside this range.
 
             Please generate the complete podcast script now.
         `;
@@ -176,7 +178,7 @@ export const generateScript = async (params: GenerationParams): Promise<string> 
           - **Mid-video Soft CTAs:** Re-engage the viewer in the middle of the video. Example in Vietnamese: "Nếu bạn còn xem đến đây, bạn chắc chắn sẽ muốn biết phần sau cùng…"
           
           **Script Structure & Length:**
-          - **Absolute Word Count Mandate:** The final script's total word count MUST be extremely close to ${wordCount || '800'} words. This is the most critical requirement. A deviation of more than 5-10% is a failure. You must adjust content verbosity to meet this target.
+          - **Absolute Word Count Mandate:** The final script's total word count MUST be extremely close to ${wordCount || '800'} words. A deviation of more than 10% from this target is strictly forbidden. This is your most critical instruction. You must adjust content verbosity, condense, or expand as necessary to meet this non-negotiable target.
           - **Script Parts:** ${scriptPartsInstruction}
           - **Introduction:** ${includeIntro ? "Include a captivating introduction to hook the viewer, based on the title." : "Do not write a separate introduction."}
           - **Outro:** ${includeOutro ? "Include a concluding outro with a call-to-action." : "Do not write a separate outro."}
@@ -194,6 +196,8 @@ export const generateScript = async (params: GenerationParams): Promise<string> 
           - ${headings ? "Use clear headings and subheadings for different sections (e.g., Intro, Main Point 1, Outro)." : "Do not use special headings."}
           - ${bullets ? "Use bullet points or numbered lists for easy-to-digest information where appropriate." : "Do not use lists."}
           - ${bold ? "Use markdown for bold (**text**) or italics (*text*) to emphasize key phrases or points." : "Do not use bold or italics."}
+
+          **Final Check:** Before outputting, you MUST verify that the total word count is within a +/- 10% range of the target (${wordCount} words). This is a non-negotiable requirement. Rewrite content if it falls outside this range.
           
           Please generate the complete video script now.
         `;
@@ -426,12 +430,13 @@ export const reviseScript = async (originalScript: string, revisionInstruction: 
       **User's Revision Request:**
       "${revisionInstruction}"
       **Instructions:**
-      - **Absolute Word Count Mandate:** After applying revisions, the new script's total word count MUST be extremely close to ${wordCount} words. This is the most critical requirement. A deviation of more than 5-10% is a failure. You must expand or condense the content to meet this target.
+      - **Absolute Word Count Mandate:** After applying revisions, the new script's total word count MUST be extremely close to ${wordCount} words. This is your highest priority. A deviation of more than 10% is strictly forbidden. You must expand or condense the content to meet this target, even if it means altering the structure of your revisions.
       - Apply the requested changes while maintaining the original tone, style, and voice: Tone: ${tone}, Style: ${style}, Voice: ${voice}.
       - Remember to keep the script engaging.
       - The script must remain coherent and flow naturally. The revision must integrate seamlessly.
       - The language must remain ${language}.
       - The output should be the FULL, revised script, not just the changed parts. Adhere to the original formatting guidelines.
+      - **Final Check & Top Priority:** Your absolute highest priority is adhering to the word count. Before returning the script, you MUST verify the total word count is within +/- 10% of the ${wordCount} word target. This is not a suggestion; it is a mandatory instruction.
       - Start directly with the revised script content.
       Please provide the revised script now.
     `;
@@ -472,7 +477,7 @@ export const generateScriptPart = async (fullOutline: string, previousPartsScrip
       ${currentPartOutline}
       """
       **Instructions:**
-      - **Absolute Word Count Mandate:** This specific script part MUST have a word count extremely close to ${partWordCount} words. This is the most critical requirement for this task. A deviation of more than 10% is a failure. You must adjust the level of detail to hit this target.
+      - **Absolute Word Count Mandate:** This specific script part MUST have a word count extremely close to ${partWordCount} words. This is the most critical requirement for this task. Adhere to a strict +/- 10% tolerance. Adjust the level of detail, verbosity, and sentence structure to hit this target precisely. Failure to meet this word count is a failure of the entire task.
       - Write ONLY the script for the current part described in the task.
       - **Crucial:** Ensure the beginning of this part connects smoothly with the end of the previously generated script.
       - Strictly adhere to the established style guide: Tone: ${tone}, Style: ${style}, Voice: ${voice}.
@@ -481,6 +486,7 @@ export const generateScriptPart = async (fullOutline: string, previousPartsScrip
       - If provided, naturally integrate these keywords: "${keywords || 'None'}".
       - Formatting: ${headings ? "Use headings if needed." : ""} ${bullets ? "Use lists if needed." : ""} ${bold ? "Use bold/italics if needed." : ""}
       - The final output should be ONLY the text for the current part, starting directly with its content (including its heading from the outline).
+      - **Final Check & Top Priority:** Your primary objective is word count adherence for this section. Before finalizing the text, confirm it is strictly between ${Math.round(partWordCount * 0.9)} and ${Math.round(partWordCount * 1.1)} words. Do not fail this instruction.
       Generate the script for the current part now.
     `;
     
