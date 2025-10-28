@@ -469,10 +469,10 @@ export const generateScriptPart = async (fullOutline: string, previousPartsScrip
     }
 };
 
-export const extractDialogue = async (script: string, language: string, provider: AiProvider, model: string): Promise<string> => {
+export const extractDialogue = async (script: string, language: string, provider: AiProvider, model: string): Promise<Record<string, string>> => {
     const prompt = `
-      You are an AI assistant specializing in processing video or podcast scripts for Text-to-Speech (TTS) generation.
-      Your task is to analyze the following script and extract ONLY the parts meant to be spoken aloud.
+      You are an AI assistant specializing in processing scripts for Text-to-Speech (TTS).
+      Your task is to analyze the following script, which is divided into sections by markdown headings (e.g., ##, ###), and extract ONLY the spoken dialogue for each section.
 
       **Input Script:**
       """
@@ -480,22 +480,29 @@ export const extractDialogue = async (script: string, language: string, provider
       """
 
       **Instructions:**
-      1.  **Extract Spoken Text Only:** Read through the entire script and pull out only the dialogue or narration (text following "Lời thoại:").
-      2.  **Remove Non-Spoken Elements:** You MUST remove all of the following:
-          -   Speaker labels if present (e.g., "Host:", "Guest 1:", "Minh Anh:").
-          -   Section headings and timestamps (e.g., "**HOOK**", "(0-5s)").
-          -   Formatting instructions or scene/sound descriptions (e.g., "Gợi ý hình ảnh/cử chỉ:", "[upbeat music]", "[show graphic of a planet]").
-          -   Markdown formatting like asterisks for bold/italics.
-          -   Any comments or notes for the editor or creator.
-          -   Section separators like "---".
-      3.  **Format for TTS:** The output should be a single, clean block of text. Paragraph breaks should be preserved to allow for natural pacing in the TTS output.
-      4.  **Language:** The output must be in the original language of the script, which is ${language}.
+      1.  **Identify Sections:** Parse the script and identify each distinct section. A section starts with a markdown heading. If there is content before the first heading, label that section "Mở đầu".
+      2.  **Extract Spoken Text:** For each identified section, extract only the dialogue or narration.
+      3.  **Remove Non-Spoken Elements:** You MUST remove all non-spoken elements: speaker labels (e.g., "Host:"), section headings themselves from the content, timestamps, visual cues (e.g., "Gợi ý hình ảnh/cử chỉ:"), sound cues (e.g., "[upbeat music]"), markdown formatting, and comments.
+      4.  **JSON Output:** The final output MUST be a valid JSON object. The keys of the object should be the section titles (e.g., "Mở đầu", "Phần 1: Lịch sử AI"), and the values should be the clean dialogue text for that corresponding section.
+      5.  **Language:** The output text must be in the original language of the script, which is ${language}.
+      6.  Output ONLY the JSON object and nothing else.
 
-      Please provide the clean, TTS-ready dialogue now.
+      Example Output:
+      {
+        "Mở đầu": "Chào mừng các bạn đã quay trở lại kênh của chúng tôi. Hôm nay, chúng ta sẽ khám phá một chủ đề vô cùng thú vị.",
+        "Phần 1: Khái niệm cơ bản": "Trí tuệ nhân tạo, hay AI, không phải là một khái niệm mới. Nó đã xuất hiện từ nhiều thập kỷ trước..."
+      }
+
+      Please provide the JSON object now.
     `;
 
     try {
-        return await callApi(prompt, provider, model);
+        const responseText = await callApi(prompt, provider, model, true);
+        const jsonResponse = JSON.parse(responseText);
+        if (typeof jsonResponse === 'object' && jsonResponse !== null) {
+            return jsonResponse;
+        }
+        throw new Error("AI returned data in an unexpected format. Expected a JSON object.");
     } catch (error) {
         throw handleApiError(error, 'tách lời thoại');
     }

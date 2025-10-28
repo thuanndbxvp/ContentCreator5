@@ -4,7 +4,7 @@ import { ClipboardIcon } from './icons/ClipboardIcon';
 interface DialogueModalProps {
   isOpen: boolean;
   onClose: () => void;
-  dialogue: string | null;
+  dialogue: Record<string, string> | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -29,9 +29,11 @@ export const DialogueModal: React.FC<DialogueModalProps> = ({ isOpen, onClose, d
         }
     }, [copySuccess]);
 
+    const dialogueText = dialogue ? Object.values(dialogue).join('\n\n') : '';
+
     const handleCopy = () => {
-        if (!dialogue) return;
-        navigator.clipboard.writeText(dialogue).then(() => {
+        if (!dialogueText) return;
+        navigator.clipboard.writeText(dialogueText).then(() => {
             setCopySuccess('Đã chép!');
         }, () => {
             setCopySuccess('Lỗi sao chép');
@@ -56,11 +58,11 @@ export const DialogueModal: React.FC<DialogueModalProps> = ({ isOpen, onClose, d
         <div className="p-6 overflow-y-auto flex-grow">
             {isLoading && <LoadingSkeleton />}
             {error && <p className="text-red-400">{error}</p>}
-            {!isLoading && !error && dialogue && (
+            {!isLoading && !error && dialogueText && (
                 <textarea
                     readOnly
                     className="w-full h-full min-h-[300px] bg-primary/70 border border-secondary rounded-md p-3 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition resize-none"
-                    value={dialogue}
+                    value={dialogueText}
                 />
             )}
         </div>

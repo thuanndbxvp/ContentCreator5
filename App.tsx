@@ -36,55 +36,20 @@ const THEMES = [
   { name: 'Blue', color: '#3b82f6' },
 ];
 
-const calculateWordCounts = (script: string): WordCountStats => {
-    if (!script) return { sections: [], total: 0 };
-
-    const cleanForVoiceOver = (text: string): string => {
-        return text
-            .replace(/^\s*[\w\d\s()]+:\s*/gm, '')
-            .replace(/\[.*?\]/g, '')
-            .replace(/(\*\*|\*|_)/g, '')
-            .replace(/---/g, '');
-    };
-    
+const calculateWordCountsFromDialogue = (dialogueObject: Record<string, string>): WordCountStats => {
     const countWords = (text: string): number => {
         if (!text) return 0;
         return text.trim().split(/\s+/).filter(Boolean).length;
     };
 
-    const sections = script.split(/(?=^(?:##|###)\s)/m).filter(s => s.trim());
-    let total = 0;
+    const sections = Object.entries(dialogueObject).map(([title, content]) => ({
+        title,
+        count: countWords(content)
+    }));
 
-    if (sections.length === 0 && script.trim().length > 0) {
-        const cleanedScript = cleanForVoiceOver(script);
-        const totalCount = countWords(cleanedScript);
-        return { sections: [{ title: 'Toàn bộ kịch bản', count: totalCount }], total: totalCount };
-    }
-    
-    if (sections.length === 0) {
-        return { sections: [], total: 0 };
-    }
+    const total = sections.reduce((sum, section) => sum + section.count, 0);
 
-    const sectionCounts = sections.map((section, index) => {
-        const lines = section.split('\n').filter(Boolean);
-        let title = `Phần ${index + 1}`;
-        let content = section;
-
-        if (lines.length > 0 && (lines[0].startsWith('##') || lines[0].startsWith('###'))) {
-            title = lines[0].replace(/^[#\s]+/, '').trim();
-            content = lines.slice(1).join('\n');
-        } else if (index === 0) {
-             const hasOtherHeadings = sections.slice(1).some(s => s.trim().startsWith('##') || s.trim().startsWith('###'));
-             if(hasOtherHeadings || sections.length === 1) title = "Mở đầu";
-        }
-        
-        const cleanedContent = cleanForVoiceOver(content);
-        const count = countWords(cleanedContent);
-        total += count;
-        return { title, count };
-    });
-
-    return { sections: sectionCounts, total };
+    return { sections, total };
 };
 
 
@@ -148,7 +113,7 @@ const App: React.FC = () => {
   const [currentPartIndex, setCurrentPartIndex] = useState<number>(0);
 
   const [isDialogueModalOpen, setIsDialogueModalOpen] = useState<boolean>(false);
-  const [extractedDialogue, setExtractedDialogue] = useState<string | null>(null);
+  const [extractedDialogue, setExtractedDialogue] = useState<Record<string, string> | null>(null);
   const [isExtracting, setIsExtracting] = useState<boolean>(false);
   const [extractionError, setExtractionError] = useState<string | null>(null);
   
@@ -176,7 +141,7 @@ const App: React.FC = () => {
   const [visualPromptsCache, setVisualPromptsCache] = useState<Map<string, VisualPrompt>>(new Map());
   const [allVisualPromptsCache, setAllVisualPromptsCache] = useState<AllVisualPromptsResult[] | null>(null);
   const [summarizedScriptCache, setSummarizedScriptCache] = useState<ScriptPartSummary[] | null>(null);
-  const [extractedDialogueCache, setExtractedDialogueCache] = useState<string | null>(null);
+  const [extractedDialogueCache, setExtractedDialogueCache] = useState<Record<string, string> | null>(null);
 
   const [hasExtractedDialogue, setHasExtractedDialogue] = useState<boolean>(false);
   const [hasGeneratedAllVisualPrompts, setHasGeneratedAllVisualPrompts] = useState<boolean>(false);
@@ -565,40 +530,37 @@ const App: React.FC = () => {
     resetCachesAndStates();
   }, [generatedScript]);
 
-  const handleExtractDialogue = useCallback(async () => {
+  const handleExtractAndCount = useCallback(async () => {
     if (!generatedScript.trim()) return;
 
     if (extractedDialogueCache) {
-      setExtractedDialogue(extractedDialogueCache);
-      setIsDialogueModalOpen(true);
-      return;
+        const stats = calculateWordCountsFromDialogue(extractedDialogueCache);
+        setWordCountStats(stats);
+        setExtractedDialogue(extractedDialogueCache);
+        setIsDialogueModalOpen(true);
+        return;
     }
     
     setIsExtracting(true);
     setExtractionError(null);
     setExtractedDialogue(null);
+    setWordCountStats(null);
     setIsDialogueModalOpen(true);
 
     try {
-        const dialogue = await extractDialogue(generatedScript, targetAudience, aiProvider, selectedModel);
-        setExtractedDialogue(dialogue);
-        setExtractedDialogueCache(dialogue);
+        const dialogueObject = await extractDialogue(generatedScript, targetAudience, aiProvider, selectedModel);
+        setExtractedDialogue(dialogueObject);
+        setExtractedDialogueCache(dialogueObject);
         setHasExtractedDialogue(true);
+        
+        const stats = calculateWordCountsFromDialogue(dialogueObject);
+        setWordCountStats(stats);
     } catch(err) {
         setExtractionError(err instanceof Error ? err.message : 'Lỗi không xác định khi tách lời thoại.');
     } finally {
         setIsExtracting(false);
     }
   }, [generatedScript, targetAudience, extractedDialogueCache, aiProvider, selectedModel]);
-
-  const handleExtractAndCount = useCallback(async () => {
-    if (!generatedScript.trim()) return;
-
-    const stats = calculateWordCounts(generatedScript);
-    setWordCountStats(stats);
-    
-    await handleExtractDialogue();
-  }, [generatedScript, handleExtractDialogue]);
 
   const handleGenerateVisualPrompt = useCallback(async (scene: string) => {
     if (visualPromptsCache.has(scene)) {

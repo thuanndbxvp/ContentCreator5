@@ -40,7 +40,7 @@ export interface CachedData {
   visualPrompts: Record<string, VisualPrompt>;
   allVisualPrompts: AllVisualPromptsResult[] | null;
   summarizedScript: ScriptPartSummary[] | null;
-  extractedDialogue: string | null;
+  extractedDialogue: Record<string, string> | null;
   hasExtractedDialogue: boolean;
   hasGeneratedAllVisualPrompts: boolean;
   hasSummarizedScript: boolean;
