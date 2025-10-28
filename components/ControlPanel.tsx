@@ -135,7 +135,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             {ideaList.length > 0 && (
                 <button 
                     onClick={() => handleSaveAll(ideaList)}
-                    className="flex items-center gap-1 text-xs bg-secondary hover:bg-primary/50 text-text-secondary px-2 py-1 rounded-md transition"
+                    className="flex items-center gap-1 text-xs bg-secondary hover:bg-border hover:text-text-primary text-text-secondary px-2 py-1 rounded-md transition"
                     aria-label="Lưu tất cả ý tưởng hiển thị"
                 >
                     <BookmarkIcon className="w-3 h-3"/>
@@ -160,13 +160,22 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                         Sử dụng
                     </button>
                     <button 
-                      onClick={() => onSaveIdea(idea)}
-                      disabled={isIdeaSaved(idea)}
-                      className="flex items-center gap-1 text-xs bg-primary hover:bg-primary/50 text-text-secondary px-2 py-1 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <BookmarkIcon className="w-3 h-3"/>
-                      {isIdeaSaved(idea) ? 'Đã lưu' : 'Lưu'}
-                    </button>
+                        onClick={() => onSaveIdea(idea)}
+                        disabled={isIdeaSaved(idea)}
+                        className="flex items-center gap-1 text-xs bg-primary hover:bg-secondary text-text-secondary px-2 py-1 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                          {isIdeaSaved(idea) ? (
+                              <>
+                                  <CheckIcon className="w-3.5 h-3.5 text-green-400" />
+                                  <span className="text-text-secondary">Đã lưu</span>
+                              </>
+                          ) : (
+                              <>
+                                  <BookmarkIcon className="w-3 h-3"/>
+                                  <span>Lưu</span>
+                              </>
+                          )}
+                      </button>
                   </div>
                 </div>
             ))}
@@ -208,7 +217,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                 <button 
                   onClick={onGenerateSuggestions} 
                   disabled={isSuggesting || !title || isLoading}
-                  className="w-full flex items-center justify-center bg-secondary hover:bg-secondary/70 disabled:bg-secondary/40 disabled:cursor-not-allowed text-text-primary font-bold py-2 px-4 rounded-lg transition"
+                  className="w-full flex items-center justify-center bg-secondary hover:bg-secondary/70 disabled:bg-secondary/40 disabled:cursor-not-allowed text-text-primary font-bold py-2 px-4 rounded-lg transition border border-border"
                 >
                   {isSuggesting ? (
                     <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -225,9 +234,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                 </button>
                 <button 
                   onClick={onOpenSavedIdeasModal} 
-                  className="w-full flex items-center justify-center bg-secondary hover:bg-secondary/70 text-text-primary font-bold py-2 px-4 rounded-lg transition"
+                  className="w-full flex items-center justify-center bg-secondary hover:bg-secondary/70 text-text-primary font-bold py-2 px-4 rounded-lg transition border border-border"
                 >
-                  <LightbulbIcon className="w-5 h-5 mr-2" />
                   Kho Ý Tưởng
                 </button>
             </div>
@@ -354,7 +362,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             <button 
                 onClick={onSuggestStyle}
                 disabled={isSuggestingStyle || !title || isLoading}
-                className="w-full mb-4 flex items-center justify-center bg-secondary/70 hover:bg-secondary disabled:bg-secondary/40 disabled:cursor-not-allowed text-text-primary font-semibold py-2.5 px-4 rounded-lg transition"
+                className="w-full mb-4 flex items-center justify-center border border-accent text-accent hover:bg-accent/20 disabled:border-border disabled:text-text-secondary disabled:cursor-not-allowed font-semibold py-2.5 px-4 rounded-lg transition"
             >
                 {isSuggestingStyle ? (
                     <>

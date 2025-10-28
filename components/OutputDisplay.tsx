@@ -40,40 +40,54 @@ const GeneratingIndicator: React.FC<{text: string}> = ({ text }) => (
 const InitialState: React.FC = () => (
     <div className="text-text-secondary prose prose-invert max-w-none prose-p:leading-relaxed">
         <h2 className="text-3xl font-bold text-text-primary mb-4" style={{color: 'var(--color-accent)'}}>Giải phóng Sức sáng tạo của bạn.</h2>
-        <p className="text-lg">Biến ý tưởng lóe lên thành kịch bản video/podcast chuyên nghiệp chỉ trong vài phút. Bắt đầu hành trình sáng tạo của bạn ngay bây giờ.</p>
-        
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-secondary p-6 rounded-lg border border-border transition-all hover:border-accent/50 hover:shadow-xl hover:shadow-accent/5">
-                <h3 className="font-semibold text-accent/90 text-lg">Bước 1: Khởi động Ý tưởng</h3>
-                <ul className="list-disc list-inside space-y-2 mt-3 text-sm text-text-secondary">
-                    <li><strong>Cài đặt API Key:</strong> Nhấp vào nút "API" ở cột bên phải để thêm key.</li>
-                    <li><strong>Nhập ý tưởng:</strong> Điền chủ đề chính hoặc phác thảo nội dung bạn muốn.</li>
-                    <li><strong>Brainstorm:</strong> Bí ý tưởng? Dùng "Brainstorm với AI" để khám phá các chủ đề hấp dẫn.</li>
-                    <li><strong>Chọn AI:</strong> Lựa chọn nhà cung cấp AI và model phù hợp nhất với bạn.</li>
-                </ul>
+        <p className="text-lg">Biến ý tưởng lóe lên thành kịch bản video/podcast chuyên nghiệp chỉ trong vài phút. Dưới đây là quy trình làm việc đề xuất:</p>
+
+        <div className="mt-8 space-y-6">
+            {/* Step 1 */}
+            <div className="bg-secondary p-6 rounded-lg border border-border flex gap-6 items-start">
+                <div className="flex-shrink-0 bg-accent text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xl shadow-md shadow-accent/20">1</div>
+                <div>
+                    <h3 className="font-semibold text-accent/90 text-lg mb-2">Bước 1: Khởi động Ý tưởng</h3>
+                    <ul className="list-disc list-inside space-y-2 text-sm text-text-secondary">
+                        <li><strong>Cài đặt API Key:</strong> Đây là bước đầu tiên và quan trọng nhất. Nhấp vào nút "API" ở cột bên phải để thêm key của bạn.</li>
+                        <li><strong>Nhập ý tưởng:</strong> Trong ô "Ý tưởng chính", điền chủ đề chính hoặc phác thảo sơ bộ nội dung bạn muốn.</li>
+                        <li><strong>Brainstorm:</strong> Bí ý tưởng? Dùng công cụ "Brainstorm với AI" ngay bên dưới để khám phá các chủ đề, góc nhìn hấp dẫn.</li>
+                        <li><strong>Chọn AI:</strong> Lựa chọn nhà cung cấp AI (Gemini hoặc OpenAI) và model phù hợp nhất với nhu cầu của bạn.</li>
+                    </ul>
+                </div>
             </div>
-            <div className="bg-secondary p-6 rounded-lg border border-border transition-all hover:border-accent/50 hover:shadow-xl hover:shadow-accent/5">
-                <h3 className="font-semibold text-accent/90 text-lg">Bước 2: Tinh chỉnh & Sáng tạo</h3>
-                 <ul className="list-disc list-inside space-y-2 mt-3 text-sm text-text-secondary">
-                    <li><strong>Từ khóa SEO:</strong> Thêm các từ khóa quan trọng để AI lồng ghép tự nhiên.</li>
-                    <li><strong>Chọn định dạng:</strong> Tùy chỉnh cho "Video YouTube" hoặc "Podcast".</li>
-                    <li><strong>Thiết lập phong cách:</strong> Chọn Lối diễn đạt phù hợp, hoặc để AI gợi ý.</li>
-                    <li><strong>Tạo kịch bản:</strong> Nhấn nút "Tạo kịch bản" và chứng kiến phép màu!</li>
-                </ul>
+
+            {/* Step 2 */}
+            <div className="bg-secondary p-6 rounded-lg border border-border flex gap-6 items-start">
+                <div className="flex-shrink-0 bg-accent text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xl shadow-md shadow-accent/20">2</div>
+                <div>
+                    <h3 className="font-semibold text-accent/90 text-lg mb-2">Bước 2: Tinh chỉnh & Sáng tạo</h3>
+                    <ul className="list-disc list-inside space-y-2 text-sm text-text-secondary">
+                        <li><strong>Từ khóa SEO:</strong> Thêm các từ khóa quan trọng vào ô "Từ khóa" để AI lồng ghép chúng một cách tự nhiên, giúp video dễ được tìm thấy hơn.</li>
+                        <li><strong>Chọn định dạng:</strong> Tùy chỉnh loại kịch bản cho "Video YouTube" hoặc "Podcast".</li>
+                        <li><strong>Thiết lập phong cách:</strong> Trong các mục "Lối diễn đạt" và "Phong cách Viết", hãy chọn các tùy chọn phù hợp nhất, hoặc nhấn "AI Gợi ý Phong cách" để AI đề xuất cho bạn.</li>
+                        <li><strong>Tạo kịch bản:</strong> Khi đã sẵn sàng, nhấn nút "Tạo kịch bản" và chứng kiến phép màu!</li>
+                    </ul>
+                </div>
             </div>
-            <div className="bg-secondary p-6 rounded-lg border border-border transition-all hover:border-accent/50 hover:shadow-xl hover:shadow-accent/5">
-                <h3 className="font-semibold text-accent/90 text-lg">Bước 3: Hậu kỳ & Hoàn thiện</h3>
-                <ul className="list-disc list-inside space-y-2 mt-3 text-sm text-text-secondary">
-                    <li><strong>Sửa đổi:</strong> Yêu cầu AI chỉnh sửa kịch bản cho đến khi bạn hoàn toàn hài lòng.</li>
-                    <li><strong>Chuyển thể:</strong> Tự động tạo tóm tắt và prompt hình ảnh/video cho từng cảnh quay.</li>
-                    <li><strong>Tách & Đếm từ:</strong> Tách lời thoại để thu âm và kiểm tra số từ.</li>
-                    <li><strong>Giọng nói AI:</strong> Chuyển lời thoại thành file audio chuyên nghiệp với ElevenLabs.</li>
-                </ul>
+
+            {/* Step 3 */}
+            <div className="bg-secondary p-6 rounded-lg border border-border flex gap-6 items-start">
+                <div className="flex-shrink-0 bg-accent text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xl shadow-md shadow-accent/20">3</div>
+                <div>
+                    <h3 className="font-semibold text-accent/90 text-lg mb-2">Bước 3: Hậu kỳ & Hoàn thiện</h3>
+                    <ul className="list-disc list-inside space-y-2 text-sm text-text-secondary">
+                        <li><strong>Sửa đổi:</strong> Kịch bản chưa ưng ý? Sử dụng ô "Sửa Kịch bản" ở cột bên phải để yêu cầu AI chỉnh sửa cho đến khi bạn hoàn toàn hài lòng.</li>
+                        <li><strong>Chuyển thể:</strong> Dùng nút "Chuyển thể kịch bản" để tự động tạo tóm tắt và prompt hình ảnh/video chi tiết cho từng cảnh quay.</li>
+                        <li><strong>Tách & Đếm từ:</strong> Nhấn "Tách voice và đếm số từ" để tách riêng phần lời thoại (dùng để thu âm) và kiểm tra số từ.</li>
+                        <li><strong>Giọng nói AI:</strong> Sử dụng nút "Chuyển thành Giọng nói" để chuyển lời thoại thành file audio chuyên nghiệp với ElevenLabs.</li>
+                    </ul>
+                </div>
             </div>
         </div>
         
         <p className="mt-10 text-center font-semibold text-text-primary text-lg">
-            Sẵn sàng chưa? Hãy bắt đầu bằng cách điền thông tin ở bảng điều khiển bên trái!
+            Sẵn sàng chưa? Hãy bắt đầu từ Bước 1 ở bảng điều khiển bên trái!
         </p>
     </div>
 );
