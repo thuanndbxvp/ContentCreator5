@@ -100,11 +100,11 @@ export const WordCountCheck: React.FC<{ script: string; targetWordCount: string 
         <div className="bg-secondary rounded-lg p-6 shadow-xl space-y-3">
             <h3 className="text-md font-semibold text-text-primary mb-2">Kiểm tra Số từ (Lời thoại)</h3>
             <div>
-                <table className="w-full text-sm text-left">
+                <table className="w-full text-sm text-left table-fixed">
                     <tbody>
                         {stats.sections.map((sec, index) => (
                             <tr key={index} className="border-b border-primary/50 last:border-b-0">
-                                <td className="py-1.5 pr-2 text-text-secondary truncate">{sec.title}</td>
+                                <td className="py-1.5 pr-2 text-text-secondary break-words">{sec.title}</td>
                                 <td className="py-1.5 text-right font-semibold text-text-primary whitespace-nowrap">{sec.count} từ</td>
                             </tr>
                         ))}
