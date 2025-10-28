@@ -9,8 +9,9 @@ import { AllVisualPromptsModal } from './components/AllVisualPromptsModal';
 import { SummarizeModal } from './components/SummarizeModal';
 import { SavedIdeasModal } from './components/SavedIdeasModal';
 import { SideToolsPanel } from './components/SideToolsPanel';
-import { generateScript, generateScriptOutline, generateTopicSuggestions, reviseScript, generateScriptPart, extractDialogue, generateKeywordSuggestions, validateApiKey, generateVisualPrompt, generateAllVisualPrompts, summarizeScriptForScenes, suggestStyleOptions, parseIdeasFromFile } from './services/aiService';
-import type { StyleOptions, FormattingOptions, LibraryItem, GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, ScriptType, NumberOfSpeakers, CachedData, TopicSuggestionItem, SavedIdea, AiProvider, WordCountStats } from './types';
+import { TtsModal } from './components/TtsModal';
+import { generateScript, generateScriptOutline, generateTopicSuggestions, reviseScript, generateScriptPart, extractDialogue, generateKeywordSuggestions, validateApiKey, generateVisualPrompt, generateAllVisualPrompts, summarizeScriptForScenes, suggestStyleOptions, parseIdeasFromFile, getElevenlabsVoices, generateElevenlabsTts } from './services/aiService';
+import type { StyleOptions, FormattingOptions, LibraryItem, GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, ScriptType, NumberOfSpeakers, CachedData, TopicSuggestionItem, SavedIdea, AiProvider, WordCountStats, ElevenlabsVoice } from './types';
 import { TONE_OPTIONS, STYLE_OPTIONS, VOICE_OPTIONS, LANGUAGE_OPTIONS, GEMINI_MODELS } from './constants';
 
 const YoutubeLogoIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -118,7 +119,7 @@ const App: React.FC = () => {
   const [extractionError, setExtractionError] = useState<string | null>(null);
   
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState<boolean>(false);
-  const [apiKeys, setApiKeys] = useState<Record<AiProvider, string[]>>({ gemini: [], openai: [] });
+  const [apiKeys, setApiKeys] = useState<Record<AiProvider, string[]>>({ gemini: [], openai: [], elevenlabs: [] });
 
   const [isVisualPromptModalOpen, setIsVisualPromptModalOpen] = useState<boolean>(false);
   const [visualPrompt, setVisualPrompt] = useState<VisualPrompt | null>(null);
@@ -134,6 +135,13 @@ const App: React.FC = () => {
   const [summarizedScript, setSummarizedScript] = useState<ScriptPartSummary[] | null>(null);
   const [isSummarizing, setIsSummarizing] = useState<boolean>(false);
   const [summarizationError, setSummarizationError] = useState<string | null>(null);
+
+  const [isTtsModalOpen, setIsTtsModalOpen] = useState<boolean>(false);
+  const [ttsVoices, setTtsVoices] = useState<ElevenlabsVoice[]>([]);
+  const [isFetchingTtsVoices, setIsFetchingTtsVoices] = useState<boolean>(false);
+  const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
+  const [isGeneratingTts, setIsGeneratingTts] = useState<boolean>(false);
+  const [ttsError, setTtsError] = useState<string | null>(null);
 
   const [aiProvider, setAiProvider] = useState<AiProvider>('gemini');
   const [selectedModel, setSelectedModel] = useState<string>(GEMINI_MODELS[1].value);
@@ -166,10 +174,11 @@ const App: React.FC = () => {
       const savedApiKeys = localStorage.getItem('ai-api-keys');
       if (savedApiKeys) {
         const parsedKeys = JSON.parse(savedApiKeys);
-        if (parsedKeys.gemini || parsedKeys.openai) {
+        if (parsedKeys.gemini || parsedKeys.openai || parsedKeys.elevenlabs) {
             setApiKeys({
                 gemini: parsedKeys.gemini || [],
                 openai: parsedKeys.openai || [],
+                elevenlabs: parsedKeys.elevenlabs || [],
             });
         }
       } else {
@@ -177,7 +186,7 @@ const App: React.FC = () => {
           if(oldGeminiKeys) {
               const parsedOldKeys = JSON.parse(oldGeminiKeys);
               if (Array.isArray(parsedOldKeys)) {
-                  const newKeys = { gemini: parsedOldKeys, openai: [] };
+                  const newKeys = { gemini: parsedOldKeys, openai: [], elevenlabs: [] };
                   setApiKeys(newKeys);
                   localStorage.setItem('ai-api-keys', JSON.stringify(newKeys));
                   localStorage.removeItem('gemini-api-keys');
@@ -658,6 +667,62 @@ const App: React.FC = () => {
   }, [generatedScript, summarizedScriptCache, aiProvider, selectedModel]);
 
 
+  const handleOpenTtsModal = async () => {
+    if (!extractedDialogueCache) {
+        // Run extraction logic but don't open the dialogue modal, just populate the cache
+        if (!generatedScript.trim()) {
+            setTtsError("Vui lòng tạo kịch bản trước.");
+            return;
+        }
+        setIsExtracting(true);
+        try {
+            const dialogueObject = await extractDialogue(generatedScript, targetAudience, aiProvider, selectedModel);
+            setExtractedDialogueCache(dialogueObject);
+            setHasExtractedDialogue(true);
+        } catch(err) {
+            setTtsError(err instanceof Error ? err.message : 'Lỗi khi tách lời thoại cho TTS.');
+            setIsExtracting(false);
+            return;
+        } finally {
+            setIsExtracting(false);
+        }
+    }
+    setIsTtsModalOpen(true);
+    setGeneratedAudioUrl(null);
+    setTtsError(null);
+    if(ttsVoices.length === 0) {
+        setIsFetchingTtsVoices(true);
+        try {
+            const voices = await getElevenlabsVoices();
+            setTtsVoices(voices);
+        } catch (err) {
+            setTtsError(err instanceof Error ? err.message : 'Lỗi không xác định khi lấy danh sách giọng nói.');
+        } finally {
+            setIsFetchingTtsVoices(false);
+        }
+    }
+  };
+
+  const handleGenerateTts = async (voiceId: string) => {
+      if (!extractedDialogueCache || !voiceId) {
+          setTtsError("Không có lời thoại hoặc chưa chọn giọng nói.");
+          return;
+      }
+      setIsGeneratingTts(true);
+      setTtsError(null);
+      setGeneratedAudioUrl(null);
+      try {
+          const fullDialogue = Object.values(extractedDialogueCache).join('\n\n');
+          const audioUrl = await generateElevenlabsTts(fullDialogue, voiceId);
+          setGeneratedAudioUrl(audioUrl);
+      } catch (err) {
+          setTtsError(err instanceof Error ? err.message : 'Lỗi không xác định khi tạo âm thanh.');
+      } finally {
+          setIsGeneratingTts(false);
+      }
+  };
+
+
   useEffect(() => {
     if (isGeneratingSequentially && currentPartIndex === 0 && generatedScript === '' && outlineParts.length > 0) {
       handleGenerateNextPart();
@@ -815,6 +880,7 @@ const App: React.FC = () => {
                 onExtractAndCount={handleExtractAndCount}
                 wordCountStats={wordCountStats}
                 isExtracting={isExtracting}
+                onOpenTtsModal={handleOpenTtsModal}
             />
         </div>
       </main>
@@ -868,6 +934,17 @@ const App: React.FC = () => {
         error={summarizationError}
         scriptType={scriptType}
         title={title}
+      />
+      <TtsModal
+        isOpen={isTtsModalOpen}
+        onClose={() => setIsTtsModalOpen(false)}
+        dialogue={extractedDialogueCache}
+        voices={ttsVoices}
+        isLoadingVoices={isFetchingTtsVoices}
+        onGenerate={handleGenerateTts}
+        isGenerating={isGeneratingTts}
+        audioUrl={generatedAudioUrl}
+        error={ttsError}
       />
     </div>
   );

@@ -4,7 +4,7 @@ export type Style = 'Narrative' | 'Descriptive' | 'Expository' | 'Persuasive' | 
 export type Voice = 'Authoritative' | 'Conversational' | 'Personal' | 'Humorous' | 'Professional' | 'Empathetic' | 'Persuasive';
 export type ScriptType = 'Video' | 'Podcast';
 export type NumberOfSpeakers = 'Auto' | '2' | '3' | '4' | '5';
-export type AiProvider = 'gemini' | 'openai';
+export type AiProvider = 'gemini' | 'openai' | 'elevenlabs';
 
 // Options interfaces
 export interface StyleOptions {
@@ -16,12 +16,20 @@ export interface StyleOptions {
 export interface FormattingOptions {
   headings: boolean;
   bullets: boolean;
+
   bold: boolean;
   includeIntro: boolean;
   includeOutro: boolean;
 }
 
 // Data structures
+export interface ElevenlabsVoice {
+  voice_id: string;
+  name: string;
+  category: string;
+  labels: Record<string, string>;
+  preview_url: string;
+}
 
 export interface TopicSuggestionItem {
     title: string;

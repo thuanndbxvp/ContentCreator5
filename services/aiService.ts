@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import type { GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, StyleOptions, TopicSuggestionItem, AiProvider } from '../types';
+import type { GenerationParams, VisualPrompt, AllVisualPromptsResult, ScriptPartSummary, StyleOptions, TopicSuggestionItem, AiProvider, ElevenlabsVoice } from '../types';
 import { TONE_OPTIONS, STYLE_OPTIONS, VOICE_OPTIONS } from '../constants';
 
 // Helper function to handle API errors and provide more specific messages
@@ -55,6 +55,24 @@ const handleApiError = (error: unknown, context: string): Error => {
          }
     } catch (e) { /* Fall through */ }
 
+    // ElevenLabs-specific error parsing
+    if (lowerCaseErrorMessage.includes('unauthorized')) {
+        return new Error('API Key ElevenLabs không hợp lệ hoặc sai. Vui lòng kiểm tra lại.');
+    }
+    if (lowerCaseErrorMessage.includes('you have reached your character quota')) {
+        return new Error('Bạn đã hết hạn mức ký tự trên ElevenLabs. Vui lòng kiểm tra tài khoản của bạn.');
+    }
+    try {
+        const errorObj = JSON.parse(errorMessage);
+        if (errorObj.detail?.message) {
+            return new Error(`Lỗi từ ElevenLabs: ${errorObj.detail.message}`);
+        }
+         if (errorObj.detail) {
+            return new Error(`Lỗi từ ElevenLabs: ${errorObj.detail}`);
+        }
+    } catch(e) { /* Fall through */ }
+
+
     // General patterns
     if (lowerCaseErrorMessage.includes('api key not valid')) {
         return new Error('API Key không hợp lệ hoặc đã bị thu hồi. Vui lòng kiểm tra lại.');
@@ -97,6 +115,14 @@ export const validateApiKey = async (apiKey: string, provider: AiProvider): Prom
                 headers: { 'Authorization': `Bearer ${apiKey}` }
             });
             if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(JSON.stringify(errorData));
+            }
+        } else if (provider === 'elevenlabs') {
+            const response = await fetch('https://api.elevenlabs.io/v1/user', {
+                headers: { 'xi-api-key': apiKey }
+            });
+             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(JSON.stringify(errorData));
             }
@@ -646,3 +672,56 @@ export const suggestStyleOptions = async (title: string, outlineContent: string,
         throw handleApiError(error, 'gợi ý phong cách');
     }
 };
+
+export const getElevenlabsVoices = async (): Promise<ElevenlabsVoice[]> => {
+    try {
+        const apiKey = getApiKey('elevenlabs');
+        const response = await fetch('https://api.elevenlabs.io/v1/voices', {
+            headers: { 'xi-api-key': apiKey }
+        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(JSON.stringify(errorData));
+        }
+        const data = await response.json();
+        return data.voices as ElevenlabsVoice[];
+    } catch (error) {
+        throw handleApiError(error, 'lấy danh sách giọng nói từ ElevenLabs');
+    }
+}
+
+export const generateElevenlabsTts = async (text: string, voiceId: string): Promise<string> => {
+    if (!text || !voiceId) {
+        throw new Error("Cần có văn bản và ID giọng nói để tạo âm thanh.");
+    }
+    try {
+        const apiKey = getApiKey('elevenlabs');
+        const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'xi-api-key': apiKey,
+                'accept': 'audio/mpeg'
+            },
+            body: JSON.stringify({
+                text: text,
+                model_id: 'eleven_multilingual_v2',
+                voice_settings: {
+                    stability: 0.5,
+                    similarity_boost: 0.75
+                }
+            })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText);
+        }
+
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        return audioUrl;
+    } catch (error) {
+        throw handleApiError(error, 'tạo âm thanh từ ElevenLabs');
+    }
+}

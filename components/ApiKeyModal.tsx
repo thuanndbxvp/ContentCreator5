@@ -28,6 +28,17 @@ const OpenAIIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     </svg>
 );
 
+const ElevenLabsIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+        <path d="M16.0911 20.3333C17.0278 20.3333 18.0556 19.8611 18.0556 18.9244V5.07555C18.0556 4.13888 17.1189 3.66666 16.0911 3.66666C15.0633 3.66666 14.1267 4.13888 14.1267 5.07555V18.9244C14.1267 19.8611 15.0633 20.3333 16.0911 20.3333Z" fill="currentColor"/>
+        <path d="M10.1978 21.7778C11.1345 21.7778 12.1622 21.3055 12.1622 20.3689V3.63111C12.1622 2.69444 11.2256 2.22222 10.1978 2.22222C9.17004 2.22222 8.23337 2.69444 8.23337 3.63111V20.3689C8.23337 21.3055 9.17004 21.7778 10.1978 21.7778Z" fill="currentColor"/>
+        <path d="M4.30449 20.3333C5.24116 20.3333 6.26893 19.8611 6.26893 18.9244V5.07555C6.26893 4.13888 5.33227 3.66666 4.30449 3.66666C3.27671 3.66666 2.34004 4.13888 2.34004 5.07555V18.9244C2.34004 19.8611 3.27671 20.3333 4.30449 20.3333Z" fill="currentColor"/>
+        <path d="M21.9845 18.2578C22.9212 18.2578 23.9489 17.7855 23.9489 16.8489V7.15111C23.9489 6.21444 23.0123 5.74222 21.9845 5.74222C20.9567 5.74222 20.0201 6.21444 20.0201 7.15111V16.8489C20.0201 17.7855 20.9567 18.2578 21.9845 18.2578Z" fill="currentColor"/>
+        <path d="M0.0511475 16.8489C1.07892 16.8489 2.01559 16.3767 2.01559 15.44V8.56C2.01559 7.62333 1.07892 7.15111 0.0511475 7.15111C-0.88552 7.15111 -1.82219 7.62333 -1.82219 8.56V15.44C-1.82219 16.3767 -0.88552 16.8489 0.0511475 16.8489Z" fill="currentColor"/>
+    </svg>
+);
+
+
 const StatusIcon: React.FC<{ status: 'valid' | 'invalid' | 'checking' | 'idle' }> = ({ status }) => {
     switch (status) {
         case 'checking':
@@ -44,6 +55,7 @@ const StatusIcon: React.FC<{ status: 'valid' | 'invalid' | 'checking' | 'idle' }
 export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, currentApiKeys, onAddKey, onDeleteKey }) => {
     const [geminiKeysInput, setGeminiKeysInput] = useState('');
     const [openAIKeysInput, setOpenAIKeysInput] = useState('');
+    const [elevenLabsKeysInput, setElevenLabsKeysInput] = useState('');
 
     const [keyStatuses, setKeyStatuses] = useState<Record<string, { status: 'valid' | 'invalid' | 'checking' | 'idle'; error?: string }>>({});
     const [isChecking, setIsChecking] = useState(false);
@@ -53,12 +65,15 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
         if (isOpen) {
             const geminiKeys = currentApiKeys.gemini || [];
             const openaiKeys = currentApiKeys.openai || [];
+            const elevenlabsKeys = currentApiKeys.elevenlabs || [];
 
             setGeminiKeysInput(geminiKeys.join('\n'));
             setOpenAIKeysInput(openaiKeys.join('\n'));
+            setElevenLabsKeysInput(elevenlabsKeys.join('\n'));
+
 
             const initialStatuses: Record<string, { status: 'valid' | 'invalid' | 'checking' | 'idle'; error?: string }> = {};
-            [...geminiKeys, ...openaiKeys].forEach(key => {
+            [...geminiKeys, ...openaiKeys, ...elevenlabsKeys].forEach(key => {
                 initialStatuses[key] = { status: 'idle' };
             });
             setKeyStatuses(initialStatuses);
@@ -71,7 +86,8 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
         setIsChecking(true);
         const allKeys = [
             ...currentApiKeys.gemini.map(key => ({ key, provider: 'gemini' as AiProvider })),
-            ...currentApiKeys.openai.map(key => ({ key, provider: 'openai' as AiProvider }))
+            ...currentApiKeys.openai.map(key => ({ key, provider: 'openai' as AiProvider })),
+            ...currentApiKeys.elevenlabs.map(key => ({ key, provider: 'elevenlabs' as AiProvider }))
         ];
 
         setKeyStatuses(prev => {
@@ -106,29 +122,39 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
     
         const newGeminiKeys = geminiKeysInput.split('\n').map(k => k.trim()).filter(Boolean);
         const newOpenAIKeys = openAIKeysInput.split('\n').map(k => k.trim()).filter(Boolean);
+        const newElevenLabsKeys = elevenLabsKeysInput.split('\n').map(k => k.trim()).filter(Boolean);
+
     
         const oldGeminiKeys = currentApiKeys.gemini || [];
         const oldOpenAIKeys = currentApiKeys.openai || [];
+        const oldElevenLabsKeys = currentApiKeys.elevenlabs || [];
+
     
         const geminiKeysToDelete = oldGeminiKeys.filter(k => !newGeminiKeys.includes(k));
         const openAIKeysToDelete = oldOpenAIKeys.filter(k => !newOpenAIKeys.includes(k));
+        const elevenLabsKeysToDelete = oldElevenLabsKeys.filter(k => !newElevenLabsKeys.includes(k));
+
     
         geminiKeysToDelete.forEach(key => onDeleteKey(key, 'gemini'));
         openAIKeysToDelete.forEach(key => onDeleteKey(key, 'openai'));
+        elevenLabsKeysToDelete.forEach(key => onDeleteKey(key, 'elevenlabs'));
     
-        const geminiKeysToAdd = newGeminiKeys.filter(k => !oldGeminiKeys.includes(k));
-        const openAIKeysToAdd = newOpenAIKeys.filter(k => !newOpenAIKeys.includes(k));
-    
-        const allNewKeys = [...newGeminiKeys.map(key => ({ key, provider: 'gemini' as AiProvider})), ...newOpenAIKeys.map(key => ({ key, provider: 'openai' as AiProvider}))];
+        const allNewKeys = [
+            ...newGeminiKeys.map(key => ({ key, provider: 'gemini' as AiProvider})), 
+            ...newOpenAIKeys.map(key => ({ key, provider: 'openai' as AiProvider})),
+            ...newElevenLabsKeys.map(key => ({ key, provider: 'elevenlabs' as AiProvider}))
+        ];
         
-        // Remove old keys, then add all current keys from textarea to respect new order
-        [...oldGeminiKeys, ...oldOpenAIKeys].forEach(key => onDeleteKey(key, allNewKeys.find(k => k.key === key)?.provider || 'gemini'));
+        [...oldGeminiKeys, ...oldOpenAIKeys, ...oldElevenLabsKeys].forEach(key => onDeleteKey(key, allNewKeys.find(k => k.key === key)?.provider || 'gemini'));
         
         for (const key of newGeminiKeys.reverse()) {
              await onAddKey(key, 'gemini');
         }
         for (const key of newOpenAIKeys.reverse()) {
              await onAddKey(key, 'openai');
+        }
+        for (const key of newElevenLabsKeys.reverse()) {
+             await onAddKey(key, 'elevenlabs');
         }
     
         setIsSaving(false);
@@ -139,13 +165,16 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
     
     const renderKeyPanel = (provider: AiProvider) => {
         const isGemini = provider === 'gemini';
-        const title = isGemini ? 'Google Gemini' : 'OpenAI';
-        const icon = isGemini ? <GoogleIcon /> : <OpenAIIcon className="text-white"/>;
+        const isElevenLabs = provider === 'elevenlabs';
+        const title = isGemini ? 'Google Gemini' : isElevenLabs ? 'ElevenLabs TTS' : 'OpenAI';
+        const icon = isGemini ? <GoogleIcon /> : isElevenLabs ? <ElevenLabsIcon className="text-sky-400"/> : <OpenAIIcon className="text-white"/>;
         const keys = currentApiKeys[provider] || [];
-        const inputValue = isGemini ? geminiKeysInput : openAIKeysInput;
-        const setInputValue = isGemini ? setGeminiKeysInput : setOpenAIKeysInput;
+        const inputValue = isGemini ? geminiKeysInput : isElevenLabs ? elevenLabsKeysInput : openAIKeysInput;
+        const setInputValue = isGemini ? setGeminiKeysInput : isElevenLabs ? setElevenLabsKeysInput : setOpenAIKeysInput;
         const link = isGemini 
             ? <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Google AI Studio</a>
+            : isElevenLabs
+            ? <a href="https://elevenlabs.io/" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">trang chủ ElevenLabs</a>
             : <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">trang tổng quan OpenAI</a>;
         
         return (
@@ -187,14 +216,15 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4" onClick={onClose}>
-            <div className="bg-secondary rounded-lg shadow-2xl w-full max-w-4xl" onClick={e => e.stopPropagation()}>
+            <div className="bg-secondary rounded-lg shadow-2xl w-full max-w-6xl" onClick={e => e.stopPropagation()}>
                 <div className="p-5 border-b border-primary">
                     <h2 className="text-xl font-bold text-accent">Quản lý API Keys</h2>
-                    <p className="text-sm text-text-secondary mt-1">Thêm hoặc chỉnh sửa API Keys cho Google Gemini và OpenAI. Hệ thống sẽ tự động thử các key hợp lệ theo thứ tự.</p>
+                    <p className="text-sm text-text-secondary mt-1">Thêm hoặc chỉnh sửa API Keys. Hệ thống sẽ tự động thử các key hợp lệ theo thứ tự từ trên xuống dưới.</p>
                 </div>
-                <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-5 grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {renderKeyPanel('gemini')}
                     {renderKeyPanel('openai')}
+                    {renderKeyPanel('elevenlabs')}
                 </div>
                 <div className="p-4 bg-primary/30 border-t border-primary flex flex-wrap justify-end items-center gap-3">
                     <button onClick={handleCheckAllKeys} disabled={isChecking || isSaving} className="text-sm bg-secondary hover:bg-primary text-text-secondary font-semibold py-2 px-4 rounded-md transition disabled:opacity-50">

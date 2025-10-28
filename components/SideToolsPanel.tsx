@@ -21,6 +21,7 @@ interface SideToolsPanelProps {
   onExtractAndCount: () => void;
   wordCountStats: WordCountStats | null;
   isExtracting: boolean;
+  onOpenTtsModal: () => void;
 }
 
 export const SideToolsPanel: React.FC<SideToolsPanelProps> = ({
@@ -38,6 +39,7 @@ export const SideToolsPanel: React.FC<SideToolsPanelProps> = ({
     onExtractAndCount,
     wordCountStats,
     isExtracting,
+    onOpenTtsModal,
 }) => {
 
     return (
@@ -78,6 +80,7 @@ export const SideToolsPanel: React.FC<SideToolsPanelProps> = ({
                         isLoading={isLoading}
                         isSummarizing={isSummarizing}
                         hasSummarizedScript={hasSummarizedScript}
+                        onOpenTtsModal={onOpenTtsModal}
                     />
                 </>
             )}
