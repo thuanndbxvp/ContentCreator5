@@ -248,27 +248,10 @@ const App: React.FC = () => {
   };
 
 
-  const handleAddApiKey = async (key: string, provider: AiProvider): Promise<{ success: boolean, error?: string }> => {
-    if (apiKeys[provider].includes(key)) return { success: false, error: 'API Key này đã tồn tại trong danh sách.' };
-
-    try {
-        await validateApiKey(key, provider);
-        setApiKeys(prev => {
-            const updatedKeysForProvider = [key, ...prev[provider]];
-            return { ...prev, [provider]: updatedKeysForProvider };
-        });
-        return { success: true };
-    } catch (err) {
-        return { success: false, error: err instanceof Error ? err.message : 'Lỗi không xác định khi xác thực key.' };
-    }
+  const handleSaveApiKeys = (keysToSave: Record<AiProvider, string[]>) => {
+    setApiKeys(keysToSave);
   };
 
-  const handleDeleteApiKey = (keyToDelete: string, provider: AiProvider) => {
-    setApiKeys(prev => {
-        const updatedKeysForProvider = prev[provider].filter(k => k !== keyToDelete);
-        return { ...prev, [provider]: updatedKeysForProvider };
-    });
-  };
 
   const handleSaveToLibrary = useCallback(() => {
     if (!generatedScript.trim() || !title.trim()) return;
@@ -909,8 +892,7 @@ const App: React.FC = () => {
         isOpen={isApiKeyModalOpen}
         onClose={() => setIsApiKeyModalOpen(false)}
         currentApiKeys={apiKeys}
-        onAddKey={handleAddApiKey}
-        onDeleteKey={handleDeleteApiKey}
+        onSaveKeys={handleSaveApiKeys}
       />
       <VisualPromptModal
         isOpen={isVisualPromptModalOpen}

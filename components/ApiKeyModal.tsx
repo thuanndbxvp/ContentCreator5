@@ -8,8 +8,7 @@ interface ApiKeyModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentApiKeys: Record<AiProvider, string[]>;
-  onAddKey: (key: string, provider: AiProvider) => Promise<{ success: boolean, error?: string }>;
-  onDeleteKey: (key: string, provider: AiProvider) => void;
+  onSaveKeys: (keys: Record<AiProvider, string[]>) => void;
 }
 
 const GoogleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -52,7 +51,7 @@ const StatusIcon: React.FC<{ status: 'valid' | 'invalid' | 'checking' | 'idle' }
     }
 };
 
-export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, currentApiKeys, onAddKey, onDeleteKey }) => {
+export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, currentApiKeys, onSaveKeys }) => {
     const [geminiKeysInput, setGeminiKeysInput] = useState('');
     const [openAIKeysInput, setOpenAIKeysInput] = useState('');
     const [elevenLabsKeysInput, setElevenLabsKeysInput] = useState('');
@@ -60,6 +59,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
     const [keyStatuses, setKeyStatuses] = useState<Record<string, { status: 'valid' | 'invalid' | 'checking' | 'idle'; error?: string }>>({});
     const [isChecking, setIsChecking] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
 
     useEffect(() => {
         if (isOpen) {
@@ -71,7 +71,6 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
             setOpenAIKeysInput(openaiKeys.join('\n'));
             setElevenLabsKeysInput(elevenlabsKeys.join('\n'));
 
-
             const initialStatuses: Record<string, { status: 'valid' | 'invalid' | 'checking' | 'idle'; error?: string }> = {};
             [...geminiKeys, ...openaiKeys, ...elevenlabsKeys].forEach(key => {
                 initialStatuses[key] = { status: 'idle' };
@@ -79,6 +78,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
             setKeyStatuses(initialStatuses);
             setIsChecking(false);
             setIsSaving(false);
+            setSaveError(null);
         }
     }, [isOpen, currentApiKeys]);
 
@@ -117,49 +117,48 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
         setIsChecking(false);
     };
 
-    const handleSaveAndCheck = async () => {
+    const handleSaveAndValidate = async () => {
         setIsSaving(true);
+        setSaveError(null);
     
         const newGeminiKeys = geminiKeysInput.split('\n').map(k => k.trim()).filter(Boolean);
         const newOpenAIKeys = openAIKeysInput.split('\n').map(k => k.trim()).filter(Boolean);
         const newElevenLabsKeys = elevenLabsKeysInput.split('\n').map(k => k.trim()).filter(Boolean);
-
     
-        const oldGeminiKeys = currentApiKeys.gemini || [];
-        const oldOpenAIKeys = currentApiKeys.openai || [];
-        const oldElevenLabsKeys = currentApiKeys.elevenlabs || [];
-
+        const newApiKeysState: Record<AiProvider, string[]> = {
+            gemini: newGeminiKeys,
+            openai: newOpenAIKeys,
+            elevenlabs: newElevenLabsKeys,
+        };
     
-        const geminiKeysToDelete = oldGeminiKeys.filter(k => !newGeminiKeys.includes(k));
-        const openAIKeysToDelete = oldOpenAIKeys.filter(k => !newOpenAIKeys.includes(k));
-        const elevenLabsKeysToDelete = oldElevenLabsKeys.filter(k => !newElevenLabsKeys.includes(k));
-
-    
-        geminiKeysToDelete.forEach(key => onDeleteKey(key, 'gemini'));
-        openAIKeysToDelete.forEach(key => onDeleteKey(key, 'openai'));
-        elevenLabsKeysToDelete.forEach(key => onDeleteKey(key, 'elevenlabs'));
-    
-        const allNewKeys = [
-            ...newGeminiKeys.map(key => ({ key, provider: 'gemini' as AiProvider})), 
-            ...newOpenAIKeys.map(key => ({ key, provider: 'openai' as AiProvider})),
-            ...newElevenLabsKeys.map(key => ({ key, provider: 'elevenlabs' as AiProvider}))
+        const allKeysToValidate: { key: string, provider: AiProvider }[] = [
+            ...newGeminiKeys.map(key => ({ key, provider: 'gemini' as AiProvider })),
+            ...newOpenAIKeys.map(key => ({ key, provider: 'openai' as AiProvider })),
+            ...newElevenLabsKeys.map(key => ({ key, provider: 'elevenlabs' as AiProvider })),
         ];
-        
-        [...oldGeminiKeys, ...oldOpenAIKeys, ...oldElevenLabsKeys].forEach(key => onDeleteKey(key, allNewKeys.find(k => k.key === key)?.provider || 'gemini'));
-        
-        for (const key of newGeminiKeys.reverse()) {
-             await onAddKey(key, 'gemini');
-        }
-        for (const key of newOpenAIKeys.reverse()) {
-             await onAddKey(key, 'openai');
-        }
-        for (const key of newElevenLabsKeys.reverse()) {
-             await onAddKey(key, 'elevenlabs');
-        }
     
-        setIsSaving(false);
-        onClose();
-    };    
+        try {
+            // Validate all keys concurrently, and add context to error messages
+            const validationPromises = allKeysToValidate.map(({ key, provider }) => 
+                validateApiKey(key, provider).catch(err => {
+                    const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
+                    throw new Error(`[${providerName}] Key ...${key.slice(-4)}: ${err.message}`);
+                })
+            );
+            
+            await Promise.all(validationPromises);
+            
+            // If all validations pass, save the entire new state
+            onSaveKeys(newApiKeysState);
+            onClose();
+    
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'An unknown validation error occurred.';
+            setSaveError(`Lỗi xác thực - ${errorMessage}`);
+        } finally {
+            setIsSaving(false);
+        }
+    };   
 
     if (!isOpen) return null;
     
@@ -168,9 +167,11 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
         const isElevenLabs = provider === 'elevenlabs';
         const title = isGemini ? 'Google Gemini' : isElevenLabs ? 'ElevenLabs TTS' : 'OpenAI';
         const icon = isGemini ? <GoogleIcon /> : isElevenLabs ? <ElevenLabsIcon className="text-sky-400"/> : <OpenAIIcon className="text-white"/>;
-        const keys = currentApiKeys[provider] || [];
+        
         const inputValue = isGemini ? geminiKeysInput : isElevenLabs ? elevenLabsKeysInput : openAIKeysInput;
         const setInputValue = isGemini ? setGeminiKeysInput : isElevenLabs ? setElevenLabsKeysInput : setOpenAIKeysInput;
+        const displayedKeys = inputValue.split('\n').map(k => k.trim()).filter(Boolean);
+
         const link = isGemini 
             ? <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Google AI Studio</a>
             : isElevenLabs
@@ -191,11 +192,11 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
                 />
                 <p className="text-xs text-text-secondary/80 mt-1">Lấy key từ {link}.</p>
                 <div className="mt-4 flex-grow space-y-2 h-32 overflow-y-auto pr-2">
-                    {keys.length === 0 ? (
+                    {displayedKeys.length === 0 ? (
                         <div className="text-center text-sm text-text-secondary pt-8">Chưa có key nào.</div>
                     ) : (
-                        keys.map((key, index) => (
-                            <div key={key} className={`bg-secondary p-2 rounded-md flex justify-between items-center text-sm transition-all ${index === 0 ? 'border-l-2 border-accent' : ''}`}>
+                        displayedKeys.map((key, index) => (
+                            <div key={`${provider}-${key}-${index}`} className={`bg-secondary p-2 rounded-md flex justify-between items-center text-sm transition-all ${index === 0 ? 'border-l-2 border-accent' : ''}`}>
                                 <div className="flex items-center gap-2">
                                     <Tooltip text={keyStatuses[key]?.error || keyStatuses[key]?.status}>
                                         <StatusIcon status={keyStatuses[key]?.status || 'idle'} />
@@ -204,7 +205,6 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
                                 </div>
                                 <div className="flex items-center gap-2">
                                     {index === 0 && <span className="text-xs font-bold text-accent bg-primary/50 px-2 py-0.5 rounded-full">ACTIVE</span>}
-                                    <button onClick={() => onDeleteKey(key, provider)} className="p-1 text-red-400 hover:text-red-300 rounded-full transition" aria-label="Xóa key"><TrashIcon className="w-4 h-4" /></button>
                                 </div>
                             </div>
                         ))
@@ -226,16 +226,19 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
                     {renderKeyPanel('openai')}
                     {renderKeyPanel('elevenlabs')}
                 </div>
-                <div className="p-4 bg-primary/30 border-t border-primary flex flex-wrap justify-end items-center gap-3">
-                    <button onClick={handleCheckAllKeys} disabled={isChecking || isSaving} className="text-sm bg-secondary hover:bg-primary text-text-secondary font-semibold py-2 px-4 rounded-md transition disabled:opacity-50">
-                       {isChecking ? 'Đang kiểm tra...' : 'Kiểm tra lại API Keys'}
-                    </button>
-                    <button onClick={handleSaveAndCheck} disabled={isSaving || isChecking} className="text-sm bg-accent hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-md transition disabled:opacity-50">
-                        {isSaving ? 'Đang lưu...' : 'Lưu và kiểm tra tất cả'}
-                    </button>
-                    <button onClick={onClose} className="text-sm bg-secondary hover:bg-primary text-text-secondary font-semibold py-2 px-4 rounded-md transition">
-                        Đóng
-                    </button>
+                <div className="p-4 bg-primary/30 border-t border-primary flex flex-col sm:flex-row justify-end items-center gap-3">
+                    {saveError && <p className="text-red-400 text-sm text-left flex-grow mr-4">{saveError}</p>}
+                    <div className="flex flex-wrap justify-end items-center gap-3">
+                        <button onClick={handleCheckAllKeys} disabled={isChecking || isSaving} className="text-sm bg-secondary hover:bg-primary text-text-secondary font-semibold py-2 px-4 rounded-md transition disabled:opacity-50">
+                           {isChecking ? 'Đang kiểm tra...' : 'Kiểm tra lại API Keys'}
+                        </button>
+                        <button onClick={handleSaveAndValidate} disabled={isSaving || isChecking} className="text-sm bg-accent hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-md transition disabled:opacity-50">
+                            {isSaving ? 'Đang lưu...' : 'Lưu và kiểm tra tất cả'}
+                        </button>
+                        <button onClick={onClose} className="text-sm bg-secondary hover:bg-primary text-text-secondary font-semibold py-2 px-4 rounded-md transition">
+                            Đóng
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
