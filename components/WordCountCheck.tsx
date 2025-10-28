@@ -12,7 +12,7 @@ interface WordCountCheckProps {
 export const WordCountCheck: React.FC<WordCountCheckProps> = ({ stats, targetWordCount, onExtractAndCount, isLoading }) => {
     if (!stats) {
         return (
-            <div className="bg-secondary/40 p-4 rounded-lg border border-border/50 space-y-3">
+            <div className="bg-secondary p-4 rounded-lg border border-border space-y-3">
                 <h3 className="text-md font-semibold text-text-primary mb-2">Kiểm tra Số từ & Tách Voice</h3>
                 <p className="text-sm text-text-secondary mb-3">Nhấn nút để tách lời thoại và xem phân tích số từ chi tiết cho kịch bản.</p>
                 <button
@@ -66,7 +66,7 @@ export const WordCountCheck: React.FC<WordCountCheckProps> = ({ stats, targetWor
     }
 
     return (
-        <div className="bg-secondary/40 p-4 rounded-lg border border-border/50 space-y-3">
+        <div className="bg-secondary p-4 rounded-lg border border-border space-y-3">
             <h3 className="text-md font-semibold text-text-primary mb-2">Kiểm tra Số từ (Lời thoại)</h3>
             <div>
                 <table className="w-full text-sm text-left table-fixed">
@@ -92,7 +92,7 @@ export const WordCountCheck: React.FC<WordCountCheckProps> = ({ stats, targetWor
             <button
                 onClick={onExtractAndCount}
                 disabled={isLoading}
-                className="w-full mt-4 flex items-center justify-center bg-secondary hover:bg-secondary/70 disabled:bg-secondary/40 disabled:cursor-not-allowed text-text-secondary font-bold py-2 px-4 rounded-lg transition border border-border"
+                className="w-full mt-4 flex items-center justify-center bg-primary hover:bg-primary/70 disabled:bg-primary/40 disabled:cursor-not-allowed text-text-secondary font-bold py-2 px-4 rounded-lg transition border border-border"
             >
                 <MicrophoneIcon className="w-5 h-5 mr-2" />
                 Xem & Copy Lời thoại

@@ -30,11 +30,11 @@ const PaletteIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 );
 
 const THEMES = [
-  { name: 'Indigo', color: '#6366f1' },
-  { name: 'Red', color: '#ef4444' },
-  { name: 'Orange', color: '#f97316' },
-  { name: 'Green', color: '#22c55e' },
-  { name: 'Blue', color: '#3b82f6' },
+  { name: 'Sky', color: '#38bdf8' },
+  { name: 'Rose', color: '#f43f5e' },
+  { name: 'Teal', color: '#2dd4bf' },
+  { name: 'Violet', color: '#8b5cf6' },
+  { name: 'Amber', color: '#f59e0b' },
 ];
 
 const calculateWordCountsFromDialogue = (dialogueObject: Record<string, string>): WordCountStats => {
@@ -155,7 +155,7 @@ const App: React.FC = () => {
   const [hasSummarizedScript, setHasSummarizedScript] = useState<boolean>(false);
   const [hasSavedToLibrary, setHasSavedToLibrary] = useState<boolean>(false);
 
-  const [themeColor, setThemeColor] = useState<string>(THEMES[2].color);
+  const [themeColor, setThemeColor] = useState<string>(THEMES[0].color);
   const [isThemeSelectorOpen, setIsThemeSelectorOpen] = useState<boolean>(false);
   const themeSelectorRef = useRef<HTMLDivElement>(null);
 
@@ -719,7 +719,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-primary">
-      <header className="bg-secondary/30 border-b border-border p-4 shadow-sm flex justify-between items-center sticky top-0 z-20 backdrop-blur-sm">
+      <header className="bg-secondary/60 border-b border-border p-4 shadow-sm flex justify-between items-center sticky top-0 z-20 backdrop-blur-sm">
         <div className="flex-1"></div>
         <div className="flex-1 text-center">
             <a href="/" className="inline-flex justify-center items-center gap-3 no-underline transition-opacity hover:opacity-80" style={{ textDecoration: 'none' }}>

@@ -144,14 +144,14 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
         };
 
         return (
-            <div className="bg-primary/50 p-4 rounded-lg border border-border flex flex-col">
+            <div className="bg-primary p-4 rounded-lg border border-border flex flex-col">
                 <div className="flex items-center gap-2 mb-3">
                     {icon}
                     <h3 className="font-semibold text-text-primary text-lg">{title}</h3>
                 </div>
                 <label className="text-sm text-text-secondary mb-1">Dán Keys của bạn vào đây (mỗi key một dòng):</label>
                 <textarea
-                    className="w-full h-28 bg-secondary/50 border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition font-mono text-sm"
+                    className="w-full h-28 bg-secondary border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition font-mono text-sm"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder="dán_api_key_của_bạn_vào_đây"
@@ -182,7 +182,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
                         displayedKeys.map((key, index) => (
                             <div key={`${provider}-${index}`} className={`bg-secondary p-2 rounded-md flex justify-between items-center text-sm transition-all ${index === 0 ? 'border-l-2 border-accent' : ''}`}>
                                 <span className="font-mono text-text-secondary">{`...${key.slice(-6)}`}</span>
-                                {index === 0 && <span className="text-xs font-bold text-accent bg-primary/50 px-2 py-0.5 rounded-full">ACTIVE</span>}
+                                {index === 0 && <span className="text-xs font-bold text-accent bg-primary px-2 py-0.5 rounded-full">ACTIVE</span>}
                             </div>
                         ))
                     )}
@@ -203,8 +203,8 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, curre
                     {renderKeyPanel('openai')}
                     {renderKeyPanel('elevenlabs')}
                 </div>
-                <div className="p-4 bg-primary/30 border-t border-border flex flex-col sm:flex-row justify-end items-center gap-3">
-                     <button onClick={onClose} className="text-sm bg-secondary hover:bg-secondary/70 text-text-secondary font-semibold py-2 px-4 rounded-md transition border border-border">
+                <div className="p-4 bg-primary border-t border-border flex flex-col sm:flex-row justify-end items-center gap-3">
+                     <button onClick={onClose} className="text-sm bg-secondary hover:bg-primary/50 text-text-secondary font-semibold py-2 px-4 rounded-md transition border border-border">
                         Đóng
                     </button>
                 </div>

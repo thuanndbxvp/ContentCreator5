@@ -67,7 +67,7 @@ interface ControlPanelProps {
 }
 
 const ControlSection: React.FC<{title: string; children: React.ReactNode}> = ({ title, children }) => (
-  <div className="bg-secondary/40 p-4 rounded-lg border border-border/50">
+  <div className="bg-secondary p-4 rounded-lg border border-border">
     <label className="block text-sm font-semibold text-text-primary mb-3">{title}</label>
     {children}
   </div>
@@ -143,9 +143,9 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                 </button>
             )}
         </div>
-        <div className="h-48 min-h-[10rem] resize-y overflow-auto border border-border/50 rounded-md space-y-2 p-2 bg-primary/30">
+        <div className="h-48 min-h-[10rem] resize-y overflow-auto border border-border rounded-md space-y-2 p-2 bg-primary">
             {ideaList.map((idea, index) => (
-                <div key={`${listTitle}-${idea.title}-${index}`} className="text-left text-sm w-full p-3 rounded-md bg-secondary/50">
+                <div key={`${listTitle}-${idea.title}-${index}`} className="text-left text-sm w-full p-3 rounded-md bg-secondary">
                   <strong className="text-text-primary block">{idea.title}</strong>
                   {idea.vietnameseTitle && idea.vietnameseTitle !== idea.title && <span className="text-xs mt-1 block text-accent/80">{idea.vietnameseTitle}</span>}
                   <span className="text-xs mt-1 block text-text-secondary">{idea.outline}</span>
@@ -162,7 +162,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                     <button 
                       onClick={() => onSaveIdea(idea)}
                       disabled={isIdeaSaved(idea)}
-                      className="flex items-center gap-1 text-xs bg-secondary hover:bg-primary/50 text-text-secondary px-2 py-1 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center gap-1 text-xs bg-primary hover:bg-primary/50 text-text-secondary px-2 py-1 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <BookmarkIcon className="w-3 h-3"/>
                       {isIdeaSaved(idea) ? 'Đã lưu' : 'Lưu'}
@@ -180,7 +180,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             <input
               id="title"
               type="text"
-              className="w-full bg-secondary/50 border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition"
+              className="w-full bg-primary border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition"
               placeholder="Nhập Tiêu đề Video, VD: 'Tương lai của du hành vũ trụ'"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -188,7 +188,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             <textarea
               id="outline"
               rows={4}
-              className="mt-2 w-full bg-secondary/50 border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition"
+              className="mt-2 w-full bg-primary border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition"
               placeholder="Phác họa nội dung (tùy chọn), VD: 'Đề cập đến SpaceX, Blue Origin. Các thách thức về công nghệ. Tầm nhìn 50 năm tới.'"
               value={outlineContent}
               onChange={(e) => setOutlineContent(e.target.value)}
@@ -238,13 +238,13 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         </ControlSection>
 
         <ControlSection title="2. Nhà cung cấp AI & Model">
-            <div className="flex bg-primary/50 rounded-lg p-1 mb-3">
+            <div className="flex bg-primary rounded-lg p-1 mb-3">
                 {AI_PROVIDER_OPTIONS.map(option => (
                     <button
                         key={option.value}
                         onClick={() => handleProviderChange(option.value)}
                         className={`w-full py-2 text-sm font-semibold rounded-md transition-colors ${
-                            aiProvider === option.value ? 'bg-accent text-white shadow-sm' : 'text-text-secondary hover:bg-secondary/50'
+                            aiProvider === option.value ? 'bg-accent text-white shadow-sm' : 'text-text-primary hover:bg-secondary'
                         }`}
                     >
                         {option.label}
@@ -255,7 +255,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
               id="model"
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}
-              className="w-full bg-secondary/50 border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition"
+              className="w-full bg-primary border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition"
             >
               {modelOptions.map(model => (
                 <option key={model.value} value={model.value}>{model.label}</option>
@@ -267,7 +267,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             <input
               id="keywords"
               type="text"
-              className="w-full bg-secondary/50 border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition"
+              className="w-full bg-primary border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition"
               placeholder="VD: AI, sáng tạo, tương lai"
               value={keywords}
               onChange={(e) => setKeywords(e.target.value)}
@@ -275,7 +275,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             <button 
               onClick={onGenerateKeywordSuggestions} 
               disabled={isSuggestingKeywords || !title || isLoading}
-              className="w-full mt-2 flex items-center justify-center bg-secondary/70 hover:bg-secondary/50 disabled:bg-secondary/40 disabled:cursor-not-allowed text-text-secondary py-2 px-4 rounded-lg transition text-sm"
+              className="w-full mt-2 flex items-center justify-center bg-secondary/70 hover:bg-secondary disabled:bg-secondary/40 disabled:cursor-not-allowed text-text-primary py-2 px-4 rounded-lg transition text-sm"
             >
               {isSuggestingKeywords ? (
                 <>
@@ -302,7 +302,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                     <p className="text-xs font-medium text-text-secondary mb-2">Gợi ý:</p>
                     <div className="flex flex-wrap gap-2">
                         {keywordSuggestions.map((suggestion, index) => (
-                            <button key={index} onClick={() => handleAddKeyword(suggestion)} className="px-3 py-1 text-xs font-medium rounded-full transition-colors bg-secondary/50 hover:bg-secondary text-text-secondary">
+                            <button key={index} onClick={() => handleAddKeyword(suggestion)} className="px-3 py-1 text-xs font-medium rounded-full transition-colors bg-secondary hover:bg-primary/50 text-text-primary">
                                 {suggestion}
                             </button>
                         ))}
@@ -312,13 +312,13 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         </ControlSection>
 
         <ControlSection title="4. Định dạng Kịch bản">
-            <div className="flex bg-primary/50 rounded-lg p-1">
+            <div className="flex bg-primary rounded-lg p-1">
                 {SCRIPT_TYPE_OPTIONS.map(option => (
                     <button
                         key={option.value}
                         onClick={() => setScriptType(option.value)}
                         className={`w-full py-2 text-sm font-semibold rounded-md transition-colors ${
-                            scriptType === option.value ? 'bg-accent text-white shadow-sm' : 'text-text-secondary hover:bg-secondary/50'
+                            scriptType === option.value ? 'bg-accent text-white shadow-sm' : 'text-text-primary hover:bg-secondary'
                         }`}
                     >
                         {option.label}
@@ -342,7 +342,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
               id="language"
               value={targetAudience}
               onChange={(e) => setTargetAudience(e.target.value)}
-              className="w-full bg-secondary/50 border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition"
+              className="w-full bg-primary border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition"
             >
               {LANGUAGE_OPTIONS.map(lang => (
                 <option key={lang.value} value={lang.value}>{lang.label}</option>
@@ -354,7 +354,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             <button 
                 onClick={onSuggestStyle}
                 disabled={isSuggestingStyle || !title || isLoading}
-                className="w-full mb-4 flex items-center justify-center bg-secondary/70 hover:bg-secondary/50 disabled:bg-secondary/40 disabled:cursor-not-allowed text-text-primary font-semibold py-2.5 px-4 rounded-lg transition"
+                className="w-full mb-4 flex items-center justify-center bg-secondary/70 hover:bg-secondary disabled:bg-secondary/40 disabled:cursor-not-allowed text-text-primary font-semibold py-2.5 px-4 rounded-lg transition"
             >
                 {isSuggestingStyle ? (
                     <>
@@ -384,7 +384,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                         className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
                         styleOptions.expression === option.value
                             ? 'bg-accent text-white shadow-md'
-                            : 'bg-secondary/70 hover:bg-secondary text-text-secondary'
+                            : 'bg-secondary hover:bg-primary/50 text-text-primary'
                         }`}
                     >
                         {option.label}
@@ -404,11 +404,11 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         </ControlSection>
 
         <ControlSection title={`${scriptType === 'Podcast' ? '9' : '8'}. Cấu trúc & Định dạng`}>
-            <div className="flex bg-primary/50 rounded-lg p-1 mb-4">
+            <div className="flex bg-primary rounded-lg p-1 mb-4">
                 <button
                     onClick={() => setLengthType('words')}
                     className={`w-full py-2 text-sm font-semibold rounded-md transition-colors ${
-                        lengthType === 'words' ? 'bg-accent text-white shadow-sm' : 'text-text-secondary hover:bg-secondary/50'
+                        lengthType === 'words' ? 'bg-accent text-white shadow-sm' : 'text-text-primary hover:bg-secondary'
                     }`}
                 >
                     Theo số từ
@@ -416,7 +416,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                 <button
                     onClick={() => setLengthType('duration')}
                     className={`w-full py-2 text-sm font-semibold rounded-md transition-colors ${
-                        lengthType === 'duration' ? 'bg-accent text-white shadow-sm' : 'text-text-secondary hover:bg-secondary/50'
+                        lengthType === 'duration' ? 'bg-accent text-white shadow-sm' : 'text-text-primary hover:bg-secondary'
                     }`}
                 >
                     Theo thời lượng
@@ -428,7 +428,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                     <Tooltip text={FORMATTING_EXPLANATIONS.wordCount}>
                         <div>
                             <label htmlFor="wordCount" className="block text-xs font-medium text-text-secondary mb-1">Tổng số từ</label>
-                            <input id="wordCount" type="number" value={wordCount} onChange={e => setWordCount(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition" placeholder="VD: 800"/>
+                            <input id="wordCount" type="number" value={wordCount} onChange={e => setWordCount(e.target.value)} className="w-full bg-primary border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition" placeholder="VD: 800"/>
                             {scriptType === 'Video' && parseInt(wordCount, 10) > 1000 && (
                                 <p className="text-xs text-amber-400 mt-2">
                                     Lưu ý: Với kịch bản dài (&gt;1000 từ), AI sẽ tạo một dàn ý chi tiết để đảm bảo chất lượng.
@@ -440,7 +440,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                     <Tooltip text={FORMATTING_EXPLANATIONS.videoDuration}>
                         <div>
                             <label htmlFor="videoDuration" className="block text-xs font-medium text-text-secondary mb-1">Thời lượng video (phút)</label>
-                            <input id="videoDuration" type="number" value={videoDuration} onChange={e => setVideoDuration(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition" placeholder="VD: 5"/>
+                            <input id="videoDuration" type="number" value={videoDuration} onChange={e => setVideoDuration(e.target.value)} className="w-full bg-primary border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition" placeholder="VD: 5"/>
                              {scriptType === 'Video' && videoDuration && (parseInt(videoDuration, 10) * 150) > 1000 && (
                                  <p className="text-xs text-amber-400 mt-2">
                                     Lưu ý: Với kịch bản dài (&gt;1000 từ), AI sẽ tạo một dàn ý chi tiết để đảm bảo chất lượng.
@@ -461,13 +461,13 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                                   value={scriptParts === 'Auto' ? '' : scriptParts} 
                                   onChange={e => setScriptParts(e.target.value)} 
                                   disabled={scriptParts === 'Auto'}
-                                  className="w-full bg-secondary/50 border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition disabled:bg-primary/50 disabled:cursor-not-allowed" 
+                                  className="w-full bg-primary border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition disabled:bg-primary/50 disabled:cursor-not-allowed" 
                                   placeholder="3"
                               />
                               <label className="flex items-center space-x-2 cursor-pointer whitespace-nowrap">
                                   <input 
                                       type="checkbox" 
-                                      className="h-4 w-4 rounded border-border text-accent focus:ring-accent bg-secondary/50" 
+                                      className="h-4 w-4 rounded border-border text-accent focus:ring-accent bg-secondary" 
                                       checked={scriptParts === 'Auto'} 
                                       onChange={(e) => setScriptParts(e.target.checked ? 'Auto' : '3')} 
                                   />
@@ -481,31 +481,31 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             <div className="grid grid-cols-2 gap-y-2 gap-x-4 mt-4">
                 <Tooltip text={FORMATTING_EXPLANATIONS.includeIntro} className="block">
                     <label className="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" className="h-4 w-4 rounded border-border text-accent focus:ring-accent bg-secondary/50" checked={formattingOptions.includeIntro} onChange={(e) => handleCheckboxChange('includeIntro', e.target.checked)} />
+                        <input type="checkbox" className="h-4 w-4 rounded border-border text-accent focus:ring-accent bg-secondary" checked={formattingOptions.includeIntro} onChange={(e) => handleCheckboxChange('includeIntro', e.target.checked)} />
                         <span className="text-text-primary">Intro</span>
                     </label>
                 </Tooltip>
                  <Tooltip text={FORMATTING_EXPLANATIONS.includeOutro} className="block">
                     <label className="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" className="h-4 w-4 rounded border-border text-accent focus:ring-accent bg-secondary/50" checked={formattingOptions.includeOutro} onChange={(e) => handleCheckboxChange('includeOutro', e.target.checked)} />
+                        <input type="checkbox" className="h-4 w-4 rounded border-border text-accent focus:ring-accent bg-secondary" checked={formattingOptions.includeOutro} onChange={(e) => handleCheckboxChange('includeOutro', e.target.checked)} />
                         <span className="text-text-primary">Outro</span>
                     </label>
                 </Tooltip>
                 <Tooltip text={FORMATTING_EXPLANATIONS.headings} className="block">
                     <label className="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" className="h-4 w-4 rounded border-border text-accent focus:ring-accent bg-secondary/50" checked={formattingOptions.headings} onChange={(e) => handleCheckboxChange('headings', e.target.checked)} />
+                        <input type="checkbox" className="h-4 w-4 rounded border-border text-accent focus:ring-accent bg-secondary" checked={formattingOptions.headings} onChange={(e) => handleCheckboxChange('headings', e.target.checked)} />
                         <span className="text-text-primary">Tiêu đề</span>
                     </label>
                 </Tooltip>
                 <Tooltip text={FORMATTING_EXPLANATIONS.bullets} className="block">
                     <label className="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" className="h-4 w-4 rounded border-border text-accent focus:ring-accent bg-secondary/50" checked={formattingOptions.bullets} onChange={(e) => handleCheckboxChange('bullets', e.target.checked)} />
+                        <input type="checkbox" className="h-4 w-4 rounded border-border text-accent focus:ring-accent bg-secondary" checked={formattingOptions.bullets} onChange={(e) => handleCheckboxChange('bullets', e.target.checked)} />
                         <span className="text-text-primary">Gạch đầu dòng</span>
                     </label>
                 </Tooltip>
                  <Tooltip text={FORMATTING_EXPLANATIONS.bold} className="block">
                     <label className="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" className="h-4 w-4 rounded border-border text-accent focus:ring-accent bg-secondary/50" checked={formattingOptions.bold} onChange={(e) => handleCheckboxChange('bold', e.target.checked)} />
+                        <input type="checkbox" className="h-4 w-4 rounded border-border text-accent focus:ring-accent bg-secondary" checked={formattingOptions.bold} onChange={(e) => handleCheckboxChange('bold', e.target.checked)} />
                         <span className="text-text-primary">In đậm/nghiêng</span>
                     </label>
                 </Tooltip>

@@ -48,7 +48,7 @@ const VoiceItem: React.FC<{voice: ElevenlabsVoice, isSelected: boolean, onSelect
     return (
         <li 
             onClick={onSelect}
-            className={`p-3 rounded-lg flex justify-between items-center cursor-pointer transition-colors border ${isSelected ? 'bg-accent text-white border-accent' : 'bg-secondary/70 hover:bg-secondary border-border'}`}
+            className={`p-3 rounded-lg flex justify-between items-center cursor-pointer transition-colors border ${isSelected ? 'bg-accent text-white border-accent' : 'bg-primary hover:bg-primary/50 border-border'}`}
         >
             <div className="flex-grow">
                 <p className="font-semibold">{voice.name}</p>
@@ -97,7 +97,7 @@ export const TtsModal: React.FC<TtsModalProps> = ({ isOpen, onClose, dialogue, v
                 {/* Left: Voice Selection */}
                 <div className="flex flex-col min-h-0">
                     <h3 className="text-lg font-semibold text-text-primary mb-3">1. Chọn một giọng đọc</h3>
-                    <div className="flex-grow bg-primary/50 rounded-lg p-3 overflow-y-auto border border-border">
+                    <div className="flex-grow bg-primary rounded-lg p-3 overflow-y-auto border border-border">
                         {isLoadingVoices && <p className="text-center p-4">Đang tải danh sách giọng nói...</p>}
                         {voices.length > 0 && (
                             <ul className="space-y-2">
@@ -120,11 +120,11 @@ export const TtsModal: React.FC<TtsModalProps> = ({ isOpen, onClose, dialogue, v
                     <textarea
                         readOnly
                         value={dialogueText}
-                        className="w-full h-48 bg-primary/70 border border-border rounded-md p-3 text-text-primary resize-none mb-4"
+                        className="w-full h-48 bg-primary border border-border rounded-md p-3 text-text-primary resize-none mb-4"
                     />
                     
                     {audioUrl && !isGenerating && (
-                        <div className="bg-primary/50 p-4 rounded-lg space-y-3 border border-border">
+                        <div className="bg-primary p-4 rounded-lg space-y-3 border border-border">
                             <h4 className="font-semibold">Nghe thử kết quả</h4>
                             <audio controls src={audioUrl} className="w-full"></audio>
                             <a href={audioUrl} download="script_audio.mp3" className="flex items-center justify-center gap-2 w-full mt-2 text-sm bg-secondary hover:bg-secondary/70 text-text-secondary font-semibold py-2 px-4 rounded-md transition border border-border">
@@ -134,7 +134,7 @@ export const TtsModal: React.FC<TtsModalProps> = ({ isOpen, onClose, dialogue, v
                         </div>
                     )}
                      {isGenerating && (
-                        <div className="bg-primary/50 p-4 rounded-lg flex items-center justify-center text-accent border border-border">
+                        <div className="bg-primary p-4 rounded-lg flex items-center justify-center text-accent border border-border">
                             <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>

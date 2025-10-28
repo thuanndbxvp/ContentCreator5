@@ -21,7 +21,7 @@ export const OptionSelector = <T extends string,>({ title, options, selectedOpti
               className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
                 selectedOption === option.value
                   ? 'bg-accent text-white shadow-md'
-                  : 'bg-secondary/70 hover:bg-secondary text-text-secondary'
+                  : 'bg-secondary hover:bg-primary/50 text-text-primary'
               }`}
             >
               {option.label}

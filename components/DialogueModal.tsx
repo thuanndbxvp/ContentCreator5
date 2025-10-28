@@ -61,7 +61,7 @@ export const DialogueModal: React.FC<DialogueModalProps> = ({ isOpen, onClose, d
             {!isLoading && !error && dialogueText && (
                 <textarea
                     readOnly
-                    className="w-full h-full min-h-[300px] bg-primary/70 border border-border rounded-md p-3 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition resize-none"
+                    className="w-full h-full min-h-[300px] bg-primary border border-border rounded-md p-3 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition resize-none"
                     value={dialogueText}
                 />
             )}

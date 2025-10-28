@@ -111,7 +111,7 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ isOpen, onClose,
                     {!isLoading && !error && summary && (
                         <div className="space-y-8">
                             {summary.map((part, index) => (
-                                <div key={index} className="bg-primary/50 p-4 rounded-lg border border-border/50">
+                                <div key={index} className="bg-primary p-4 rounded-lg border border-border">
                                     <h3 className="text-lg font-bold text-accent mb-4 border-b border-border pb-2">{part.partTitle}</h3>
                                     <div className="space-y-4">
                                         {part.scenes.map(scene => (
@@ -122,7 +122,7 @@ export const SummarizeModal: React.FC<SummarizeModalProps> = ({ isOpen, onClose,
                                                     <textarea
                                                         readOnly
                                                         rows={3}
-                                                        className="w-full bg-secondary/70 border border-border rounded-md p-2 text-text-primary resize-y text-sm font-mono"
+                                                        className="w-full bg-secondary border border-border rounded-md p-2 text-text-primary resize-y text-sm font-mono"
                                                         value={scene.visualPrompt}
                                                     />
                                                     <CopyButton text={scene.visualPrompt} />

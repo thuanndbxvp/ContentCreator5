@@ -24,11 +24,11 @@ export const ScriptTools: React.FC<ScriptToolsProps> = ({
   onOpenTtsModal,
 }) => {
   return (
-    <div className="bg-secondary/40 p-4 rounded-lg border border-border/50">
+    <div className="bg-secondary p-4 rounded-lg border border-border">
         <h3 className="text-md font-semibold text-text-primary mb-3">Công cụ Kịch bản</h3>
         <textarea
             rows={4}
-            className="w-full bg-secondary/50 border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition"
+            className="w-full bg-primary border border-border rounded-md p-2 text-text-primary focus:ring-2 focus:ring-accent focus:border-accent transition"
             placeholder="Nhập yêu cầu sửa đổi, VD: 'Làm cho phần mở đầu kịch tính hơn'"
             value={revisionPrompt}
             onChange={(e) => setRevisionPrompt(e.target.value)}

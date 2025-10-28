@@ -43,7 +43,7 @@ const InitialState: React.FC = () => (
         <p className="text-lg">Biến ý tưởng lóe lên thành kịch bản video/podcast chuyên nghiệp chỉ trong vài phút. Bắt đầu hành trình sáng tạo của bạn ngay bây giờ.</p>
         
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-secondary/50 p-6 rounded-lg border border-border/50 transition-all hover:border-accent/50 hover:shadow-xl hover:shadow-accent/5">
+            <div className="bg-secondary p-6 rounded-lg border border-border transition-all hover:border-accent/50 hover:shadow-xl hover:shadow-accent/5">
                 <h3 className="font-semibold text-accent/90 text-lg">Bước 1: Khởi động Ý tưởng</h3>
                 <ul className="list-disc list-inside space-y-2 mt-3 text-sm text-text-secondary">
                     <li><strong>Cài đặt API Key:</strong> Nhấp vào nút "API" ở cột bên phải để thêm key.</li>
@@ -52,16 +52,16 @@ const InitialState: React.FC = () => (
                     <li><strong>Chọn AI:</strong> Lựa chọn nhà cung cấp AI và model phù hợp nhất với bạn.</li>
                 </ul>
             </div>
-            <div className="bg-secondary/50 p-6 rounded-lg border border-border/50 transition-all hover:border-accent/50 hover:shadow-xl hover:shadow-accent/5">
+            <div className="bg-secondary p-6 rounded-lg border border-border transition-all hover:border-accent/50 hover:shadow-xl hover:shadow-accent/5">
                 <h3 className="font-semibold text-accent/90 text-lg">Bước 2: Tinh chỉnh & Sáng tạo</h3>
                  <ul className="list-disc list-inside space-y-2 mt-3 text-sm text-text-secondary">
                     <li><strong>Từ khóa SEO:</strong> Thêm các từ khóa quan trọng để AI lồng ghép tự nhiên.</li>
                     <li><strong>Chọn định dạng:</strong> Tùy chỉnh cho "Video YouTube" hoặc "Podcast".</li>
-                    <li><strong>Thiết lập phong cách:</strong> Chọn Tông giọng và Lối diễn đạt phù hợp, hoặc để AI gợi ý.</li>
+                    <li><strong>Thiết lập phong cách:</strong> Chọn Lối diễn đạt phù hợp, hoặc để AI gợi ý.</li>
                     <li><strong>Tạo kịch bản:</strong> Nhấn nút "Tạo kịch bản" và chứng kiến phép màu!</li>
                 </ul>
             </div>
-            <div className="bg-secondary/50 p-6 rounded-lg border border-border/50 transition-all hover:border-accent/50 hover:shadow-xl hover:shadow-accent/5">
+            <div className="bg-secondary p-6 rounded-lg border border-border transition-all hover:border-accent/50 hover:shadow-xl hover:shadow-accent/5">
                 <h3 className="font-semibold text-accent/90 text-lg">Bước 3: Hậu kỳ & Hoàn thiện</h3>
                 <ul className="list-disc list-inside space-y-2 mt-3 text-sm text-text-secondary">
                     <li><strong>Sửa đổi:</strong> Yêu cầu AI chỉnh sửa kịch bản cho đến khi bạn hoàn toàn hài lòng.</li>
@@ -175,7 +175,7 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({
                                 <button
                                     onClick={() => handleGeneratePromptClick(index, section)}
                                     disabled={loadingPromptIndex === index}
-                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-secondary/70 hover:bg-secondary text-text-secondary text-xs font-semibold rounded-md transition disabled:opacity-50"
+                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-secondary hover:bg-primary/50 text-text-primary text-xs font-semibold rounded-md transition disabled:opacity-50"
                                 >
                                     {loadingPromptIndex === index ? (
                                         <>
@@ -221,7 +221,7 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({
                          {!isOutline && (
                             <button 
                                 onClick={onGenerateAllVisualPrompts} 
-                                className="flex items-center space-x-2 bg-secondary/70 hover:bg-secondary text-text-secondary px-3 py-1.5 rounded-md text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed border border-border" 
+                                className="flex items-center space-x-2 bg-secondary hover:bg-primary/50 text-text-primary px-3 py-1.5 rounded-md text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed border border-border" 
                                 disabled={isGeneratingAllVisualPrompts || isLoading}
                             >
                                 <CameraIcon className="w-4 h-4" />
@@ -229,16 +229,16 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({
                                 {hasGeneratedAllVisualPrompts && !isGeneratingAllVisualPrompts && <CheckIcon className="w-4 h-4 text-green-400 ml-1" />}
                             </button>
                         )}
-                        <button onClick={onSaveToLibrary} className="flex items-center space-x-2 bg-secondary/70 hover:bg-secondary text-text-secondary px-3 py-1.5 rounded-md text-sm transition disabled:opacity-50 disabled:cursor-not-allowed border border-border" disabled={isLoading}>
+                        <button onClick={onSaveToLibrary} className="flex items-center space-x-2 bg-secondary hover:bg-primary/50 text-text-primary px-3 py-1.5 rounded-md text-sm transition disabled:opacity-50 disabled:cursor-not-allowed border border-border" disabled={isLoading}>
                             <SaveIcon className="w-4 h-4" />
                             <span>Lưu vào thư viện</span>
                             {hasSavedToLibrary && <CheckIcon className="w-4 h-4 text-green-400 ml-1" />}
                         </button>
-                        <button onClick={handleExportTxt} className="flex items-center space-x-2 bg-secondary/70 hover:bg-secondary text-text-secondary px-3 py-1.5 rounded-md text-sm transition disabled:opacity-50 disabled:cursor-not-allowed border border-border" disabled={isLoading}>
+                        <button onClick={handleExportTxt} className="flex items-center space-x-2 bg-secondary hover:bg-primary/50 text-text-primary px-3 py-1.5 rounded-md text-sm transition disabled:opacity-50 disabled:cursor-not-allowed border border-border" disabled={isLoading}>
                             <DownloadIcon className="w-4 h-4" />
                             <span>Tải .txt</span>
                         </button>
-                        <button onClick={handleCopy} className="flex items-center space-x-2 bg-secondary/70 hover:bg-secondary text-text-secondary px-3 py-1.5 rounded-md text-sm transition disabled:opacity-50 disabled:cursor-not-allowed border border-border" disabled={!!copySuccess || isLoading}>
+                        <button onClick={handleCopy} className="flex items-center space-x-2 bg-secondary hover:bg-primary/50 text-text-primary px-3 py-1.5 rounded-md text-sm transition disabled:opacity-50 disabled:cursor-not-allowed border border-border" disabled={!!copySuccess || isLoading}>
                             <ClipboardIcon className="w-4 h-4" />
                             <span>{copySuccess || 'Sao chép'}</span>
                         </button>

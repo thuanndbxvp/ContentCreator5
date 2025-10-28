@@ -36,7 +36,7 @@ export const SavedIdeasModal: React.FC<SavedIdeasModalProps> = ({ isOpen, onClos
           ) : (
             <ul className="space-y-4">
               {ideas.map(item => (
-                <li key={item.id} className="bg-primary/50 p-4 rounded-lg flex justify-between items-start gap-4 transition-all hover:bg-primary border border-border/50 hover:border-accent/50">
+                <li key={item.id} className="bg-secondary p-4 rounded-lg flex justify-between items-start gap-4 transition-all hover:bg-primary border border-border hover:border-accent/50">
                   <div className="flex-grow">
                     <h3 className="font-semibold text-text-primary">{item.title}</h3>
                     {item.vietnameseTitle && item.vietnameseTitle !== item.title && <p className="text-sm text-accent/80 mt-1">{item.vietnameseTitle}</p>}

@@ -32,7 +32,7 @@ export const LibraryModal: React.FC<LibraryModalProps> = ({ isOpen, onClose, lib
           ) : (
             <ul className="space-y-4">
               {library.map(item => (
-                <li key={item.id} className="bg-primary/50 p-4 rounded-lg flex justify-between items-start gap-4 border border-border/50 hover:border-accent/50 transition-colors">
+                <li key={item.id} className="bg-secondary p-4 rounded-lg flex justify-between items-start gap-4 border border-border hover:border-accent/50 transition-colors">
                   <div className="flex-grow">
                     <h3 className="font-semibold text-text-primary">{item.title}</h3>
                     <p className="text-sm text-text-secondary mt-1 line-clamp-2">{item.outlineContent}</p>

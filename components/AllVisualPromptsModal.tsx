@@ -102,7 +102,7 @@ export const AllVisualPromptsModal: React.FC<AllVisualPromptsModalProps> = ({ is
             {!isLoading && !error && prompts && (
                 <div className="space-y-6">
                     {prompts.map((item, index) => (
-                        <div key={index} className="bg-primary/50 p-4 rounded-lg border border-border/50">
+                        <div key={index} className="bg-primary p-4 rounded-lg border border-border">
                             <details>
                                 <summary className="text-sm font-semibold text-accent/90 cursor-pointer hover:text-accent">
                                     Cảnh {index + 1}: {item.scene.split('\n')[0].replace(/^[#\s]+/, '')}
@@ -116,7 +116,7 @@ export const AllVisualPromptsModal: React.FC<AllVisualPromptsModalProps> = ({ is
                                 <textarea
                                     readOnly
                                     rows={3}
-                                    className="w-full bg-secondary/70 border border-border rounded-md p-2 text-text-primary resize-y text-sm"
+                                    className="w-full bg-secondary border border-border rounded-md p-2 text-text-primary resize-y text-sm"
                                     value={item.english}
                                 />
                                 <CopyButton text={item.english} />
@@ -126,7 +126,7 @@ export const AllVisualPromptsModal: React.FC<AllVisualPromptsModalProps> = ({ is
                                 <textarea
                                     readOnly
                                     rows={3}
-                                    className="w-full bg-secondary/70 border border-border rounded-md p-2 text-text-primary resize-y text-sm"
+                                    className="w-full bg-secondary border border-border rounded-md p-2 text-text-primary resize-y text-sm"
                                     value={item.vietnamese}
                                 />
                                 <CopyButton text={item.vietnamese} />

@@ -65,7 +65,7 @@ export const VisualPromptModal: React.FC<VisualPromptModalProps> = ({ isOpen, on
                         <textarea
                             readOnly
                             rows={4}
-                            className="w-full bg-primary/70 border border-border rounded-md p-3 text-text-primary resize-y"
+                            className="w-full bg-primary border border-border rounded-md p-3 text-text-primary resize-y"
                             value={prompt.english}
                         />
                          <button 
@@ -81,7 +81,7 @@ export const VisualPromptModal: React.FC<VisualPromptModalProps> = ({ isOpen, on
                         <textarea
                             readOnly
                             rows={4}
-                            className="w-full bg-primary/70 border border-border rounded-md p-3 text-text-primary resize-y"
+                            className="w-full bg-primary border border-border rounded-md p-3 text-text-primary resize-y"
                             value={prompt.vietnamese}
                         />
                          <button 

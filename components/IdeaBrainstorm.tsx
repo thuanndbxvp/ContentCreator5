@@ -168,7 +168,7 @@ export const IdeaBrainstorm: React.FC<IdeaBrainstormProps> = ({ setTitle, setOut
     };
 
     return (
-        <div className="mt-2 bg-secondary/50 rounded-lg border border-border/50">
+        <div className="mt-2 bg-secondary rounded-lg border border-border">
             <button 
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full flex justify-center items-center gap-2 p-3"
@@ -181,15 +181,15 @@ export const IdeaBrainstorm: React.FC<IdeaBrainstormProps> = ({ setTitle, setOut
                 </svg>
             </button>
             {isOpen && (
-                <div className="border-t border-border/50 p-3">
+                <div className="border-t border-border p-3">
                     <div ref={chatContainerRef} className="max-h-64 overflow-y-auto pr-2 space-y-4 mb-3">
                         {messages.map((msg, index) => (
                            <div key={index} className={`flex items-end gap-2 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                                 {msg.role === 'model' && <SparklesIcon className="w-6 h-6 p-1 bg-accent text-white rounded-full flex-shrink-0" />}
-                                <div className={`max-w-[85%] rounded-lg px-3 py-2 ${msg.role === 'model' ? 'bg-secondary text-text-primary' : 'bg-accent text-white'}`}>
+                                <div className={`max-w-[85%] rounded-lg px-3 py-2 ${msg.role === 'model' ? 'bg-primary text-text-primary' : 'bg-accent text-white'}`}>
                                     <p className="text-sm" dangerouslySetInnerHTML={{ __html: msg.content.replace(/\*\*\[Idea\]: (.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br />') }} />
                                     {msg.role === 'model' && msg.content.includes('[Idea]:') && (
-                                        <button onClick={() => handleUseIdea(msg.content)} className="text-xs mt-2 bg-primary/70 hover:bg-primary text-text-secondary px-2 py-1 rounded">
+                                        <button onClick={() => handleUseIdea(msg.content)} className="text-xs mt-2 bg-secondary hover:bg-primary/50 text-text-secondary px-2 py-1 rounded">
                                             Dùng ý tưởng này
                                         </button>
                                     )}
@@ -199,7 +199,7 @@ export const IdeaBrainstorm: React.FC<IdeaBrainstormProps> = ({ setTitle, setOut
                          {isLoading && (
                             <div className="flex items-end gap-2">
                                 <SparklesIcon className="w-6 h-6 p-1 bg-accent text-white rounded-full flex-shrink-0 animate-pulse" />
-                                <div className="max-w-[85%] rounded-lg px-3 py-2 bg-secondary">
+                                <div className="max-w-[85%] rounded-lg px-3 py-2 bg-primary">
                                     <div className="flex items-center space-x-1">
                                         <div className="w-2 h-2 bg-text-secondary rounded-full animate-bounce [animation-delay:-0.3s]"></div>
                                         <div className="w-2 h-2 bg-text-secondary rounded-full animate-bounce [animation-delay:-0.15s]"></div>
