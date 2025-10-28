@@ -89,6 +89,14 @@ export const WordCountCheck: React.FC<WordCountCheckProps> = ({ stats, targetWor
                     )}
                 </div>
             </div>
+            <button
+                onClick={onExtractAndCount}
+                disabled={isLoading}
+                className="w-full mt-4 flex items-center justify-center bg-primary/70 hover:bg-primary disabled:bg-primary/50 disabled:cursor-not-allowed text-text-secondary font-bold py-2 px-4 rounded-lg transition"
+            >
+                <MicrophoneIcon className="w-5 h-5 mr-2" />
+                Xem & Copy Lời thoại
+            </button>
         </div>
     );
 };
