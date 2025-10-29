@@ -30,13 +30,6 @@ interface OutputDisplayProps {
   visualPromptsCache: Map<string, VisualPrompt>;
 }
 
-const GeneratingIndicator: React.FC<{text: string}> = ({ text }) => (
-    <div className="w-full bg-secondary rounded-lg p-3 flex items-center justify-center space-x-3 shadow-lg">
-        <div className="w-5 h-5 border-2 border-text-secondary/40 border-t-text-primary rounded-full animate-spin"></div>
-        <span className="text-text-primary font-semibold">{text}</span>
-    </div>
-);
-
 const InitialState: React.FC = () => (
     <div className="text-text-secondary prose prose-invert max-w-none prose-p:leading-relaxed">
         <h2 className="text-3xl font-bold text-text-primary mb-4" style={{color: 'var(--color-accent)'}}>Giải phóng Sức sáng tạo của bạn.</h2>
@@ -163,13 +156,7 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({
 
     const renderContent = () => {
         if (isLoading && !script) {
-            return (
-                <div className="flex items-center justify-center h-full">
-                    <div className="w-full max-w-md">
-                        <GeneratingIndicator text="Đang tạo..." />
-                    </div>
-                </div>
-            );
+            return null;
         }
         if (error) {
             return <div className="text-center text-red-400 bg-red-900/20 border border-red-500/30 p-4 rounded-md">
@@ -220,8 +207,14 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({
   return (
     <div className="bg-secondary rounded-lg shadow-xl h-full flex flex-col border border-border">
         <div className="flex justify-between items-center p-4 border-b border-border flex-wrap gap-2 sticky top-[81px] bg-secondary/80 backdrop-blur-sm z-10">
-            <h2 className="text-lg font-semibold text-text-primary">
-                {getTitle()}
+            <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
+                <span>{getTitle()}</span>
+                {isLoading && (
+                    <svg className="animate-spin h-5 w-5 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                )}
             </h2>
             <div className="flex items-center gap-3 flex-wrap">
                 {script && !isLoading && isOutline && !isGeneratingSequentially && (
@@ -262,11 +255,6 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({
         </div>
         <div className="p-6 overflow-y-auto flex-grow min-h-[400px]">
             <div className="w-full h-full">
-                {isLoading && script && (
-                    <div className="mb-4">
-                        <GeneratingIndicator text="Đang sửa đổi..." />
-                    </div>
-                )}
                 {renderContent()}
             </div>
         </div>

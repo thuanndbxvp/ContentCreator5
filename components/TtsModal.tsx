@@ -116,6 +116,7 @@ export const TtsModal: React.FC<TtsModalProps> = ({ isOpen, onClose, dialogue, v
         } catch (caughtError) {
             setGenerationState(prev => ({
                 ...prev,
+                // Fix: Safely access the message property from the caught error.
                 [partTitle]: { isLoading: false, audioUrl: null, error: caughtError instanceof Error ? caughtError.message : 'Lỗi không xác định' }
             }));
         }
