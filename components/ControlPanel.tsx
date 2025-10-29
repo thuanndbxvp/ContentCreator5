@@ -271,7 +271,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             </select>
         </ControlSection>
 
-        <ControlSection title="3. Từ khóa (Tùy chọn)">
+        <ControlSection title="3. Từ khóa SEO (Tùy chọn)">
             <input
               id="keywords"
               type="text"

@@ -712,7 +712,7 @@ const App: React.FC = () => {
             <a href="/" className="inline-flex justify-center items-center gap-3 no-underline transition-opacity hover:opacity-80" style={{ textDecoration: 'none' }}>
               <YoutubeLogoIcon />
               <h1 className="text-2xl font-bold" style={{color: 'var(--color-accent)'}}>
-                Trợ lý Sáng tạo Kịch bản YouTube
+                Youtube Script Generator by AI
               </h1>
             </a>
             <p className="text-text-secondary mt-1 text-sm md:text-base">

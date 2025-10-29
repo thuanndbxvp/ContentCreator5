@@ -80,7 +80,7 @@ const InitialState: React.FC = () => (
         </div>
         
         <p className="mt-10 text-center font-semibold text-text-primary text-lg">
-            Sẵn sàng chưa? Hãy bắt đầu từ Bước 1 ở bảng điều khiển bên trái!
+            Bạn đã sẵn sàng chưa? Hãy bắt đầu từ Bước 1 ở bảng điều khiển bên trái!
         </p>
     </div>
 );
