@@ -149,8 +149,15 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({
     const showActionControls = !!script;
 
     const getTitle = () => {
-        if (isGeneratingSequentially) return `Đang tạo kịch bản... (Phần ${currentPart}/${totalParts})`;
-        if (revisionCount > 0) return `Kịch bản (sửa lần ${revisionCount})`;
+        if (isGeneratingSequentially) {
+            return `Đang tạo kịch bản... (Phần ${currentPart}/${totalParts})`;
+        }
+        if (revisionCount > 0) {
+            return `Kịch bản (sửa lần ${revisionCount})`;
+        }
+        if (isLoading) {
+            return 'Kịch bản đang được tạo';
+        }
         return 'Kịch bản được tạo';
     };
 
